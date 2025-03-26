@@ -2,17 +2,21 @@
   "name": "f1fantasy",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://ascchung.github.io/f1fantasy",
   "scripts": {
     "start": "concurrently \"postcss src/App.css -o src/output.css --watch\" \"react-scripts start\"",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^14.0.0",
     "@testing-library/user-event": "^13.5.0",
+    "googleapis": "^148.0.0",
     "papaparse": "^5.5.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -23,6 +27,7 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.21",
+    "gh-pages": "^6.3.0",
     "postcss": "^8.4.35",
     "postcss-cli": "^11.0.1",
     "tailwindcss": "^3.4.17"

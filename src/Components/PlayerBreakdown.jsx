@@ -1,32 +1,32 @@
 import React, { useEffect, useState } from "react";
 import Papa from "papaparse";
 
-const csvUrl =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTT5gN6c7rrGgkgBNtuN9YH6vbctMRzPhg7xeS8rV067dz9wkYM-SOGGhqTnOfPBA/pub?gid=1917170938&single=true&output=csv";
+const driverStatsUrl = "http://localhost:3001/api/f1-points/drivers";
 
 export default function PlayerBreakdown() {
   const [drivers, setDrivers] = useState([]);
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
-    Papa.parse(csvUrl, {
-      download: true,
-      header: true,
-      complete: (results) => {
-        const filtered = results.data.filter(
+    fetch(driverStatsUrl)
+      .then((res) => res.json())
+      .then((json) => {
+        const filtered = json.data.filter(
           (row) =>
             row.Driver &&
             row["Race Points"] &&
             (row.Players || row["Players 2"])
         );
+
         const normalized = filtered.map((d) => ({
-          name: d.Driver,
+          name: d.Driver.trim(),
           points: parseInt(d["Race Points"]) || 0,
           players: [d.Players?.trim(), d["Players 2"]?.trim()].filter(Boolean),
         }));
+
         setDrivers(normalized);
-      },
-    });
+      })
+      .catch((err) => console.error("Failed to fetch driver data", err));
   }, []);
 
   const allPlayers = [...new Set(drivers.flatMap((d) => d.players))];

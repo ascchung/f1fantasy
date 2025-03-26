@@ -1,26 +1,20 @@
 import React, { useEffect, useState } from "react";
 import Papa from "papaparse";
 
-const csvUrl =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTT5gN6c7rrGgkgBNtuN9YH6vbctMRzPhg7xeS8rV067dz9wkYM-SOGGhqTnOfPBA/pub?gid=2019789549&single=true&output=csv";
+const leaderboardUrl = "http://localhost:3001/api/f1-points/leaderboard";
 
 export default function Leaderboard() {
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    Papa.parse(csvUrl, {
-      download: true,
-      header: true,
-      complete: (results) => {
-        const filtered = results.data.filter((row) => row.Player && row.Points);
+    fetch(leaderboardUrl)
+      .then((res) => res.json())
+      .then((json) => {
+        const filtered = json.data.filter((row) => row.Player && row.Points);
         setData(filtered);
-      },
-    });
+      })
+      .catch((err) => console.error("Failed to fetch leaderboard", err));
   }, []);
-
-  const sorted = [...data].sort(
-    (a, b) => parseInt(b.Points) - parseInt(a.Points)
-  );
 
   return (
     <div className="p-4 md:p-6 lg:p-10 bg-black min-h-screen">

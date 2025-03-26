@@ -9,11 +9,9 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const driverStatsUrl =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTT5gN6c7rrGgkgBNtuN9YH6vbctMRzPhg7xeS8rV067dz9wkYM-SOGGhqTnOfPBA/pub?gid=1917170938&single=true&output=csv";
+const driverStatsUrl = "http://localhost:3001/api/f1-points/drivers";
 
-const raceScoresUrl =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTT5gN6c7rrGgkgBNtuN9YH6vbctMRzPhg7xeS8rV067dz9wkYM-SOGGhqTnOfPBA/pub?gid=1617059325&single=true&output=csv";
+const raceScoresUrl = "http://localhost:3001/api/f1-points/race-scores";
 
 const teamColors = {
   "Red Bull": "#1E41FF",
@@ -36,11 +34,10 @@ export default function DriverChart() {
   const [selectedRace, setSelectedRace] = useState("");
 
   useEffect(() => {
-    Papa.parse(driverStatsUrl, {
-      download: true,
-      header: true,
-      complete: (results) => {
-        const drivers = results.data.filter(
+    fetch(driverStatsUrl)
+      .then((res) => res.json())
+      .then((json) => {
+        const drivers = json.data.filter(
           (row) =>
             row.Driver && row["Race Points"] && !isNaN(row["Race Points"])
         );
@@ -56,21 +53,20 @@ export default function DriverChart() {
 
         setStandings(sorted);
         setBarData(sorted);
-      },
-    });
+      })
+      .catch((err) => console.error("Failed to fetch driver data", err));
   }, []);
 
   useEffect(() => {
-    Papa.parse(raceScoresUrl, {
-      download: true,
-      header: true,
-      complete: (results) => {
-        const rows = results.data.filter((r) => r["Grand Prix"]);
+    fetch(raceScoresUrl)
+      .then((res) => res.json())
+      .then((json) => {
+        const rows = json.data.filter((r) => r["Grand Prix"]);
         setRaceScores(rows);
         setAvailableRaces(rows.map((r) => r["Grand Prix"]));
         setSelectedRace(rows[0]["Grand Prix"]);
-      },
-    });
+      })
+      .catch((err) => console.error("Failed to fetch race scores", err));
   }, []);
 
   const selectedRaceRow = raceScores.find(
