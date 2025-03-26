@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/f1fantasy/static/css/main.ef8989b3.css",
+    "main.js": "/f1fantasy/static/js/main.88beb0c6.js",
+    "static/js/453.ebc7be32.chunk.js": "/f1fantasy/static/js/453.ebc7be32.chunk.js",
+    "index.html": "/f1fantasy/index.html",
+    "main.ef8989b3.css.map": "/f1fantasy/static/css/main.ef8989b3.css.map",
+    "main.88beb0c6.js.map": "/f1fantasy/static/js/main.88beb0c6.js.map",
+    "453.ebc7be32.chunk.js.map": "/f1fantasy/static/js/453.ebc7be32.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.ef8989b3.css",
+    "static/js/main.88beb0c6.js"
+  ]
+}
