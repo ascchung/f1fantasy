@@ -9,8 +9,7 @@ const auth = new google.auth.GoogleAuth({
   scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
 });
 
-const SPREADSHEET_ID =
-  "https://docs.google.com/spreadsheets/d/1oBThAbHh_5W5dzOGMXx8USlsXqaop_1h/edit?gid=1917170938#gid=1917170938";
+const SPREADSHEET_ID = "1oBThAbHh_5W5dzOGMXx8USlsXqaop_1h";
 
 router.get("/drivers", async (req, res) => {
   try {
