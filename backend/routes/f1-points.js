@@ -9,7 +9,7 @@ const auth = new google.auth.GoogleAuth({
   scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
 });
 
-const SPREADSHEET_ID = "1oBThAbHh_5W5dzOGMXx8USlsXqaop_1h";
+const SPREADSHEET_ID = "1QZAMkQA2zd_WaP-B0wbOnqdWqN01cqNat7j6EXRnrqw";
 
 router.get("/drivers", async (req, res) => {
   try {
@@ -38,10 +38,15 @@ router.get("/drivers", async (req, res) => {
 
     res.json({ data });
   } catch (error) {
-    console.error("Error fetching Drivers & Teams:", error);
-    res
-      .status(500)
-      .json({ error: "Failed to fetch data from Drivers & Teams" });
+    console.error(
+      "Detailed Sheets API error:",
+      error.response?.data || error.message
+    );
+    res.status(500).json({
+      error: "Failed to fetch data from Sheets",
+      message: error.message,
+      details: error.response?.data || "No additional details",
+    });
   }
 });
 
@@ -71,8 +76,15 @@ router.get("/race-scores", async (req, res) => {
 
     res.json({ data });
   } catch (error) {
-    console.error("Error fetching Race Scores:", error);
-    res.status(500).json({ error: "Failed to fetch race scores data" });
+    console.error(
+      "Detailed Sheets API error:",
+      error.response?.data || error.message
+    );
+    res.status(500).json({
+      error: "Failed to fetch data from Sheets",
+      message: error.message,
+      details: error.response?.data || "No additional details",
+    });
   }
 });
 
@@ -102,8 +114,15 @@ router.get("/leaderboard", async (req, res) => {
 
     res.json({ data });
   } catch (error) {
-    console.error("Error fetching Leaderboard:", error);
-    res.status(500).json({ error: "Failed to fetch leaderboard data" });
+    console.error(
+      "Detailed Sheets API error:",
+      error.response?.data || error.message
+    );
+    res.status(500).json({
+      error: "Failed to fetch data from Sheets",
+      message: error.message,
+      details: error.response?.data || "No additional details",
+    });
   }
 });
 
