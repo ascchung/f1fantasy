@@ -1,11 +1,14 @@
-const express = require("express");
 const cors = require("cors");
+const express = require("express");
 const app = express();
 const f1PointsRoutes = require("./routes/f1-points");
 
+// ✅ Fix CORS to allow GitHub Pages frontend
 app.use(
   cors({
-    origin: ["https://ascchung.github.io/"],
+    origin: "https://ascchung.github.io", // <-- this is the actual Origin GitHub Pages sends
+    methods: ["GET"],
+    allowedHeaders: ["Content-Type"],
   })
 );
 
