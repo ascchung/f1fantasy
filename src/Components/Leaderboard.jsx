@@ -1,20 +1,27 @@
 import React, { useEffect, useState } from "react";
-import Papa from "papaparse";
 
-const leaderboardUrl = "http://localhost:3001/api/f1-points/leaderboard";
+const BASE_URL = "https://f1fantasy-o25v.onrender.com/api/f1-points";
 
 export default function Leaderboard() {
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    fetch(leaderboardUrl)
-      .then((res) => res.json())
-      .then((json) => {
-        const filtered = json.data.filter((row) => row.Player && row.Points);
-        setData(filtered);
-      })
-      .catch((err) => console.error("Failed to fetch leaderboard", err));
+    const fetchLeaderboard = async () => {
+      try {
+        const res = await fetch(`${BASE_URL}/leaderboard`);
+        const json = await res.json();
+        setData(json.data);
+      } catch (err) {
+        console.error("Error fetching leaderboard", err);
+      }
+    };
+
+    fetchLeaderboard();
   }, []);
+
+  const sorted = [...data].sort(
+    (a, b) => parseFloat(b.Points) - parseFloat(a.Points)
+  );
 
   return (
     <div className="p-4 md:p-6 lg:p-10 bg-black min-h-screen">
@@ -23,25 +30,33 @@ export default function Leaderboard() {
       </h2>
       <table className="min-w-full bg-gray-700 shadow rounded-xl overflow-hidden">
         <thead>
-          <tr className="bg-gray-100 text-left text-sm font-semibold">
+          <tr className="bg-gray-100 text-left text-sm font-semibold text-black">
             <th className="py-3 px-4">Rank</th>
             <th className="py-3 px-4">Player</th>
             <th className="py-3 px-4">Points</th>
           </tr>
         </thead>
         <tbody>
-          {sorted.map((entry, index) => (
-            <tr
-              key={entry.Player}
-              className="border-t hover:bg-gray-50 text-white"
-            >
-              <td className="py-2 px-4">
-                {index + 1} {index === 0 && "🏆"} {index === 6 && "💀"}
-              </td>
-              <td className="py-2 px-4">{entry.Player}</td>
-              <td className="py-2 px-4">{entry.Points}</td>
-            </tr>
-          ))}
+          {[...data]
+            .sort((a, b) => b.Points - a.Points)
+            .map((entry, index) => (
+              <tr
+                key={entry.Player}
+                className="border-t hover:bg-gray-600 text-white"
+              >
+                <td className="py-2 px-4 font-medium flex items-center gap-2">
+                  {index + 1}
+                  {index === 0 && (
+                    <span className="text-yellow-400 animate-pulse">🏆</span>
+                  )}
+                  {index === sorted.length - 1 && (
+                    <span className="text-red-500 animate-bounce">💀</span>
+                  )}
+                </td>
+                <td className="py-2 px-4">{entry.Player}</td>
+                <td className="py-2 px-4">{entry.Points}</td>
+              </tr>
+            ))}
         </tbody>
       </table>
     </div>

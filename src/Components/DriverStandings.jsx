@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import Papa from "papaparse";
 import {
   BarChart,
   Bar,
@@ -9,9 +8,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const driverStatsUrl = "http://localhost:3001/api/f1-points/drivers";
-
-const raceScoresUrl = "http://localhost:3001/api/f1-points/race-scores";
+const BASE_URL = "https://f1fantasy-o25v.onrender.com/api/f1-points";
 
 const teamColors = {
   "Red Bull": "#1E41FF",
@@ -34,40 +31,46 @@ export default function DriverChart() {
   const [selectedRace, setSelectedRace] = useState("");
 
   useEffect(() => {
-    fetch(driverStatsUrl)
-      .then((res) => res.json())
-      .then((json) => {
-        const drivers = json.data.filter(
-          (row) =>
-            row.Driver && row["Race Points"] && !isNaN(row["Race Points"])
-        );
+    const fetchDrivers = async () => {
+      try {
+        const res = await fetch(`${BASE_URL}/drivers`);
+        const json = await res.json();
+        setStandings(json.data);
+      } catch (err) {
+        console.error("Error fetching drivers", err);
+      }
+    };
 
-        const formatted = drivers.map((d) => ({
-          driver: d.Driver.trim(),
-          team: d.Team?.trim() || "",
-          points: parseFloat(d["Race Points"]),
-          fill: teamColors[d.Team?.trim()] || "#8884d8",
-        }));
-
-        const sorted = [...formatted].sort((a, b) => b.points - a.points);
-
-        setStandings(sorted);
-        setBarData(sorted);
-      })
-      .catch((err) => console.error("Failed to fetch driver data", err));
+    fetchDrivers();
   }, []);
 
   useEffect(() => {
-    fetch(raceScoresUrl)
-      .then((res) => res.json())
-      .then((json) => {
-        const rows = json.data.filter((r) => r["Grand Prix"]);
-        setRaceScores(rows);
-        setAvailableRaces(rows.map((r) => r["Grand Prix"]));
-        setSelectedRace(rows[0]["Grand Prix"]);
-      })
-      .catch((err) => console.error("Failed to fetch race scores", err));
+    const fetchRaceScores = async () => {
+      try {
+        const res = await fetch(`${BASE_URL}/race-scores`);
+        const json = await res.json();
+        setRaceScores(json.data);
+      } catch (err) {
+        console.error("Error fetching race scores", err);
+      }
+    };
+
+    fetchRaceScores();
   }, []);
+
+  useEffect(() => {
+    const races = raceScores.map((row) => row["Grand Prix"]).filter(Boolean);
+    setAvailableRaces(races);
+  }, [raceScores]);
+
+  useEffect(() => {
+    const data = standings.map((driver) => ({
+      driver: driver.Driver,
+      points: parseFloat(driver["Race Points"]),
+      fill: teamColors[driver.Team] || "#8884d8",
+    }));
+    setBarData(data);
+  }, [standings]);
 
   const selectedRaceRow = raceScores.find(
     (r) => r["Grand Prix"] === selectedRace
@@ -101,13 +104,13 @@ export default function DriverChart() {
             <tbody>
               {standings.map((entry, index) => (
                 <tr
-                  key={entry.driver}
+                  key={entry.Driver}
                   className="border-t hover:bg-gray-100 text-white"
                 >
                   <td className="py-2 px-4 font-medium">{index + 1}</td>
-                  <td className="py-2 px-4">{entry.driver}</td>
-                  <td className="py-2 px-4">{entry.team}</td>
-                  <td className="py-2 px-4">{entry.points}</td>
+                  <td className="py-2 px-4">{entry.Driver}</td>
+                  <td className="py-2 px-4">{entry.Team}</td>
+                  <td className="py-2 px-4">{entry["Race Points"]}</td>
                 </tr>
               ))}
             </tbody>
@@ -124,6 +127,7 @@ export default function DriverChart() {
               onChange={(e) => setSelectedRace(e.target.value)}
               className="mb-4 p-2 border rounded w-full"
             >
+              <option value="">Select a race</option>
               {availableRaces.map((race) => (
                 <option key={race} value={race}>
                   {race}
@@ -173,14 +177,11 @@ export default function DriverChart() {
               />
               <YAxis tick={{ fill: "white" }} />
               <Tooltip />
-              {barData.map((entry) => (
-                <Bar
-                  key={entry.driver}
-                  dataKey="points"
-                  name={entry.driver}
-                  fill={entry.fill}
-                />
-              ))}
+              <Bar dataKey="points">
+                {barData.map((entry) => (
+                  <cell key={`cell-${entry.driver}`} fill={entry.fill} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>

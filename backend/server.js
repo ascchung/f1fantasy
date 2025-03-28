@@ -5,7 +5,7 @@ const f1PointsRoutes = require("./routes/f1-points");
 
 app.use(
   cors({
-    origin: "https://ascchung.github.io/f1fantasy", // or full repo path
+    origin: ["https://ascchung.github.io", "http://localhost:3000"],
   })
 );
 

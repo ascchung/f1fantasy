@@ -1,72 +1,90 @@
 import React, { useEffect, useState } from "react";
-import Papa from "papaparse";
 
-const driverStatsUrl = "http://localhost:3001/api/f1-points/drivers";
+const BASE_URL = "https://f1fantasy-o25v.onrender.com/api/f1-points";
 
 export default function PlayerBreakdown() {
   const [drivers, setDrivers] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [playerTotals, setPlayerTotals] = useState([]);
 
   useEffect(() => {
-    fetch(driverStatsUrl)
-      .then((res) => res.json())
-      .then((json) => {
-        const filtered = json.data.filter(
-          (row) =>
-            row.Driver &&
-            row["Race Points"] &&
-            (row.Players || row["Players 2"])
-        );
+    const fetchDrivers = async () => {
+      try {
+        const res = await fetch(`${BASE_URL}/drivers`);
+        const json = await res.json();
+        setDrivers(json.data);
+      } catch (err) {
+        console.error("Error fetching drivers", err);
+      }
+    };
 
-        const normalized = filtered.map((d) => ({
-          name: d.Driver.trim(),
-          points: parseInt(d["Race Points"]) || 0,
-          players: [d.Players?.trim(), d["Players 2"]?.trim()].filter(Boolean),
-        }));
-
-        setDrivers(normalized);
-      })
-      .catch((err) => console.error("Failed to fetch driver data", err));
+    fetchDrivers();
   }, []);
 
-  const allPlayers = [...new Set(drivers.flatMap((d) => d.players))];
-  const playerDrivers = drivers.filter((d) => d.players.includes(selected));
+  useEffect(() => {
+    const totals = {};
+
+    drivers.forEach((d) => {
+      const points = parseFloat(d["Race Points"]) || 0;
+      const players = [d.Players, d["Players 2"]].filter(Boolean);
+      players.forEach((p) => {
+        if (!totals[p]) totals[p] = 0;
+        totals[p] += points;
+      });
+    });
+
+    const sorted = Object.entries(totals)
+      .map(([name, total]) => ({ name, total }))
+      .sort((a, b) => b.total - a.total);
+
+    setPlayerTotals(sorted);
+  }, [drivers]);
+
+  const playerDrivers = drivers.filter(
+    (d) => d.Players === selected || d["Players 2"] === selected
+  );
 
   return (
     <div className="p-4 md:p-6 lg:p-10 bg-black min-h-screen">
       <h2 className="text-4xl font-bold mb-6 text-center text-white">
         Player Team Breakdown
       </h2>
+
       <div className="flex flex-wrap gap-3 mb-6 justify-center">
-        {allPlayers.map((p) => (
+        {playerTotals.map((p, index) => (
           <button
-            key={p}
-            onClick={() => setSelected(p)}
-            className={`py-2 px-4 rounded-lg shadow text-white ${
-              selected === p
+            key={p.name}
+            onClick={() => setSelected(p.name)}
+            className={`py-2 px-4 rounded-lg shadow text-white flex items-center gap-2 ${
+              selected === p.name
                 ? "bg-indigo-600"
                 : "bg-indigo-400 hover:bg-indigo-500"
             }`}
           >
-            {p}
+            <span className="font-semibold">
+              #{index + 1} {p.name}
+            </span>
+            <span className="bg-white text-black px-2 py-0.5 text-xs rounded-full">
+              {p.total} pts
+            </span>
           </button>
         ))}
       </div>
 
       {selected && (
         <div className="flex justify-center">
-          <div className="w-1/2 p-4 md:p-6 lg:p-10 bg-gray-200">
-            <h3 className="text-xl font-medium mb-2">{selected}'s Team</h3>
-            <ul className="bg-gray-700 shadow rounded-xl divide-y">
+          <div className="w-full md:w-2/3 lg:w-1/2 p-6 bg-gray-800 rounded-xl shadow-md">
+            <h3 className="text-2xl font-semibold mb-4 text-white">
+              {selected}'s Team
+            </h3>
+            <ul className="divide-y divide-gray-600">
               {playerDrivers.map((d) => (
                 <li
-                  key={d.name}
-                  className="flex justify-between px-4 py-2 text-white"
+                  key={d.Driver}
+                  className="flex justify-between px-4 py-3 text-white"
                 >
-                  <span>{d.name}</span>
-                  <span className="font-semibold text-white">
-                    {d.points} pts
-                  </span>
+                  <span>{d.Driver}</span>
+                  <span className="font-semibold">{d["Race Points"]} pts</span>
                 </li>
               ))}
             </ul>

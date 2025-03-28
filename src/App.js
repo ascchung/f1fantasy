@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { HashRouter as Router, Routes, Route, Link } from "react-router-dom";
 import Leaderboard from "./Components/Leaderboard";
 import DriverChart from "./Components/DriverStandings";
 import PlayerBreakdown from "./Components/PlayerBreakdown";
