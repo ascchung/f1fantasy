@@ -37,26 +37,24 @@ export default function Leaderboard() {
           </tr>
         </thead>
         <tbody>
-          {[...data]
-            .sort((a, b) => b.Points - a.Points)
-            .map((entry, index) => (
-              <tr
-                key={entry.Player}
-                className="border-t hover:bg-gray-600 text-white"
-              >
-                <td className="py-2 px-4 font-medium flex items-center gap-2">
-                  {index + 1}
-                  {index === 0 && (
-                    <span className="text-yellow-400 animate-pulse">🏆</span>
-                  )}
-                  {index === sorted.length - 1 && (
-                    <span className="text-red-500 animate-bounce">💀</span>
-                  )}
-                </td>
-                <td className="py-2 px-4">{entry.Player}</td>
-                <td className="py-2 px-4">{entry.Points}</td>
-              </tr>
-            ))}
+          {sorted.map((entry, index) => (
+            <tr
+              key={entry.Player}
+              className="border-t hover:bg-gray-600 text-white"
+            >
+              <td className="py-2 px-4 font-medium flex items-center gap-2">
+                {index + 1}
+                {index === 0 && (
+                  <span className="text-yellow-400 animate-pulse">🏆</span>
+                )}
+                {index === sorted.length - 1 && (
+                  <span className="text-red-500 animate-bounce">💀</span>
+                )}
+              </td>
+              <td className="py-2 px-4">{entry.Player}</td>
+              <td className="py-2 px-4">{entry.Points}</td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
