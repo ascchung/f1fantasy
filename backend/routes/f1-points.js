@@ -18,7 +18,7 @@ router.get("/drivers", async (req, res) => {
 
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: '"Drivers & Teams"!A1:F21',
+      range: "Drivers & Teams!A1:F21",
     });
 
     const rows = response.data.values;
@@ -57,7 +57,7 @@ router.get("/race-scores", async (req, res) => {
 
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: '"Race Scores"!A1:U26',
+      range: "Race Scores!A1:U26",
     });
 
     const rows = response.data.values;
@@ -97,7 +97,7 @@ router.get("/leaderboard", async (req, res) => {
 
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: '"Leaderboard"!D1:E8',
+      range: "Leaderboard!D1:E8",
     });
 
     const rows = response.data.values;
