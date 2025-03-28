@@ -20,7 +20,7 @@ export default function Leaderboard() {
   }, []);
 
   const sorted = [...data].sort(
-    (a, b) => parseFloat(b.Points) - parseFloat(a.Points)
+    (a, b) => parseFloat(b.Points?.trim?.()) - parseFloat(a.Points?.trim?.())
   );
 
   return (
@@ -51,7 +51,7 @@ export default function Leaderboard() {
                   <span className="text-red-500 animate-bounce">💀</span>
                 )}
               </td>
-              <td className="py-2 px-4">{entry.Player}</td>
+              <td className="py-2 px-4">{entry.Standings.trim()}</td>
               <td className="py-2 px-4">{entry.Points}</td>
             </tr>
           ))}

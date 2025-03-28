@@ -64,7 +64,7 @@ export default function PlayerBreakdown() {
             <span className="font-semibold">
               #{index + 1} {p.name}
             </span>
-            <span className="bg-white text-black px-2 py-0.5 text-xs rounded-full">
+            <span className="px-2 py-0.5 text-xs rounded-full">
               {p.total} pts
             </span>
           </button>

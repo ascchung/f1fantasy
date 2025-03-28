@@ -102,17 +102,22 @@ export default function DriverChart() {
               </tr>
             </thead>
             <tbody>
-              {standings.map((entry, index) => (
-                <tr
-                  key={entry.Driver}
-                  className="border-t hover:bg-gray-100 text-white"
-                >
-                  <td className="py-2 px-4 font-medium">{index + 1}</td>
-                  <td className="py-2 px-4">{entry.Driver}</td>
-                  <td className="py-2 px-4">{entry.Team}</td>
-                  <td className="py-2 px-4">{entry["Race Points"]}</td>
-                </tr>
-              ))}
+              {[...standings]
+                .sort(
+                  (a, b) =>
+                    parseFloat(b["Race Points"]) - parseFloat(a["Race Points"])
+                )
+                .map((entry, index) => (
+                  <tr
+                    key={entry.Driver}
+                    className="border-t hover:bg-gray-100 text-white"
+                  >
+                    <td className="py-2 px-4 font-medium">{index + 1}</td>
+                    <td className="py-2 px-4">{entry.Driver}</td>
+                    <td className="py-2 px-4">{entry.Team}</td>
+                    <td className="py-2 px-4">{entry["Race Points"]}</td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
