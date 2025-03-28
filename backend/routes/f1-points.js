@@ -57,7 +57,7 @@ router.get("/race-scores", async (req, res) => {
 
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: '"Race Scores"!A1:U27',
+      range: '"Race Scores"!A1:U26',
     });
 
     const rows = response.data.values;
@@ -66,8 +66,10 @@ router.get("/race-scores", async (req, res) => {
       return res.status(404).json({ error: "No race scores found." });
     }
 
+    const filtered = rows.slice(1).filter((row) => row[0]); // ensure Grand Prix name exists
+
     const headers = rows[0];
-    const data = rows.slice(1).map((row) =>
+    const data = filtered.map((row) =>
       headers.reduce((obj, key, i) => {
         obj[key] = row[i];
         return obj;
@@ -95,7 +97,7 @@ router.get("/leaderboard", async (req, res) => {
 
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: '"Leaderboard"!A1:E9',
+      range: '"Leaderboard"!D1:E8',
     });
 
     const rows = response.data.values;
