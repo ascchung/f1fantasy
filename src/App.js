@@ -12,7 +12,7 @@ export default function App() {
         <div className="bg-gray-500 p-4">
           <div className="flex items-end justify-center space-x-4 ">
             <h1 className="text-2xl text-white font-bold mb-4 italic">
-              Boaty McBoatface Fantasy F1 2025
+            🏎️ Boaty McBoatface Fantasy F1 2025 🏎️
             </h1>
           </div>
           <div className="flex gap-4 p-5 justify-center">
