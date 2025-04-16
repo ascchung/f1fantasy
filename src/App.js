@@ -10,27 +10,29 @@ export default function App() {
     <Router>
       <div>
         <div className="bg-gray-500 p-4">
-          <div className="flex items-end justify-center space-x-4 ">
-            <h1 className="text-2xl text-white font-bold mb-4 italic">
-            🏎️ Boaty McBoatface Fantasy F1 2025 🏎️
+          <div className="flex items-end justify-center space-x-4 text-center">
+            <h1 className="text-2xl text-white font-bold mb-4 italic flex items-center justify-center">
+              <span>🏎️</span>
+              <span>Boaty McBoatface Fantasy F1 2025</span>
+              <span>🏎️</span>
             </h1>
           </div>
-          <div className="flex gap-4 p-5 justify-center">
+          <div className="flex gap-4 p-5 justify-center text-center items-center">
             <Link
               to="/leaderboard"
-              className="bg-red-500 hover:bg-gray-600 text-white py-2 px-4 rounded-xl shadow"
+              className="h-20 bg-red-500 hover:bg-gray-600 text-white py-2 px-4 rounded-xl shadow flex items-center justify-center"
             >
               Leaderboard
             </Link>
             <Link
               to="/driver-chart"
-              className="bg-red-500 hover:bg-gray-600 text-white py-2 px-4 rounded-xl shadow"
+              className="h-20 bg-red-500 hover:bg-gray-600 text-white py-2 px-4 rounded-xl shadow flex items-center justify-center"
             >
               Driver Standings
             </Link>
             <Link
               to="/player-breakdown"
-              className="bg-red-500 hover:bg-gray-600 text-white py-2 px-4 rounded-xl shadow"
+              className="h-20 bg-red-500 hover:bg-gray-600 text-white py-2 px-4 rounded-xl shadow flex items-center justify-center"
             >
               Player Breakdown
             </Link>

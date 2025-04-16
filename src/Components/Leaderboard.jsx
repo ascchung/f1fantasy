@@ -43,12 +43,12 @@ export default function Leaderboard() {
               className="border-t hover:bg-gray-600 text-white"
             >
               <td className="py-2 px-4 font-medium flex items-center gap-2">
-                {index + 1}
-                {index === 0 && (
+                {index === 0 ? (
                   <span className="text-yellow-400 animate-pulse">🏆</span>
-                )}
-                {index === sorted.length - 1 && (
+                ) : index === sorted.length - 1 ? (
                   <span className="text-red-500 animate-bounce">💀</span>
+                ) : (
+                  index + 1
                 )}
               </td>
               <td className="py-2 px-4">{entry.Standings.trim()}</td>
