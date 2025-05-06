@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 
-const BASE_URL = "https://f1fantasy-o25v.onrender.com/api/f1-points";
+const BASE_URL =
+  process.env.NODE_ENV === "development"
+    ? "/api/f1-points"
+    : process.env.REACT_APP_API_URL;
 
 export default function Leaderboard() {
   const [data, setData] = useState([]);
@@ -13,6 +16,7 @@ export default function Leaderboard() {
         setData(json.data);
       } catch (err) {
         console.error("Error fetching leaderboard", err);
+        setData([]);
       }
     };
 
@@ -20,7 +24,7 @@ export default function Leaderboard() {
   }, []);
 
   const sorted = [...data].sort(
-    (a, b) => parseFloat(b.Points?.trim?.()) - parseFloat(a.Points?.trim?.())
+    (a, b) => parseFloat(b.Points) - parseFloat(a.Points)
   );
 
   return (
@@ -39,7 +43,7 @@ export default function Leaderboard() {
         <tbody>
           {sorted.map((entry, index) => (
             <tr
-              key={entry.Player}
+              key={`${entry.Standings}-${entry.Points}`}
               className="border-t hover:bg-gray-600 text-white"
             >
               <td className="py-2 px-4 font-medium flex items-center gap-2">
@@ -51,7 +55,7 @@ export default function Leaderboard() {
                   index + 1
                 )}
               </td>
-              <td className="py-2 px-4">{entry.Standings.trim()}</td>
+              <td className="py-2 px-4">{entry.Standings}</td>
               <td className="py-2 px-4">{entry.Points}</td>
             </tr>
           ))}
