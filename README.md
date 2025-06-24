@@ -1,70 +1,144 @@
-# Getting Started with Create React App
+# F1 Fantasy
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A fantasy F1 app displaying driver standings and player scores powered by Google Sheets.
 
-## Available Scripts
+## 🚀 Project Overview
 
-In the project directory, you can run:
+This repository contains:
 
-### `npm start`
+* **Express Backend** (`/backend`)
+  Serves Google Sheets data via REST endpoints:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+  * `/drivers` → list of drivers, teams, and points
+  * `/race-scores` → per-race points table
+  * `/leaderboard` → overall player leaderboard
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+* **React Frontend** (`/src`)
+  Displays tables and charts using Recharts and TailwindCSS.
 
-### `npm test`
+---
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 🛠️ Prerequisites
 
-### `npm run build`
+* **Node.js** v16+ and npm
+* **Google Cloud service account** with Sheets API enabled
+* **Git** for version control
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+---
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## ⚙️ Environment Setup
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### 1. Clone the repo
 
-### `npm run eject`
+```bash
+git clone https://github.com/ascchung/f1fantasy.git
+cd f1fantasy
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### 2. Install dependencies
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+npm install
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+---
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 📦 Express Backend Setup
 
-## Learn More
+1. **Environment variables**
+   Create `backend/.env` (ignored by Git) with:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+   ```dotenv
+   # Allowed front-end origins (comma-separated)
+   CLIENT_ORIGINS=http://localhost:3000,https://ascchung.github.io,https://f1fantasy-o25v.onrender.com
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+   # Express server port
+   PORT=3001
 
-### Code Splitting
+   # Google Sheets credentials and ID
+   SPREADSHEET_ID=<your_spreadsheet_id>
+   GOOGLE_APPLICATION_CREDENTIALS=./secrets/google-credentials.json
+   ```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+2. **Place your Google credentials**
 
-### Analyzing the Bundle Size
+   * Download the service-account JSON into `backend/secrets/google-credentials.json`
+   * Ensure `backend/secrets/` is listed in `.gitignore`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+3. **Start the backend**
 
-### Making a Progressive Web App
+```bash
+npm run start-backend
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+Runs Express on `http://localhost:3001`.
 
-### Advanced Configuration
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## 🎨 React Frontend Setup
 
-### Deployment
+1. **Development proxy**
+   In `package.json`:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+   ```json
+   "proxy": "http://localhost:3001",
+   ```
 
-### `npm run build` fails to minify
+   This proxies `/api/f1-points/*` to your local backend.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+2. **Production API URL**
+   Create `.env.production` with:
+
+   ```dotenv
+   REACT_APP_API_URL=https://f1fantasy-o25v.onrender.com/api/f1-points
+   ```
+
+3. **Start all services**
+
+```bash
+npm start
+```
+
+Launches:
+
+* Express API (`start-backend`)
+* Tailwind CSS watcher (`start-css`)
+* React dev server (`start-frontend`)
+
+Visit `http://localhost:3000` to view the app.
+
+---
+
+## 🔧 Available Scripts
+
+| Command                 | Description                                      |
+| ----------------------- | ------------------------------------------------ |
+| `npm start`             | Start backend, CSS watcher, and React dev server |
+| `npm run build`         | Build React app for production                   |
+| `npm run deploy`        | Deploy the built app to GitHub Pages             |
+| `npm run start-backend` | Start Express API only                           |
+
+---
+
+## 📂 `.gitignore`
+
+```
+# Node
+node_modules/
+
+# Secrets & dotenv
+.env*
+backend/secrets/
+
+# Tailwind output
+src/output.css
+```
+
+---
+
+## 📖 Notes
+
+* **Data Source**: All driver and player data is pulled from Google Sheets, ensuring easy updates by maintaining the spreadsheet.
+* **Key Files**: Keep your `google-credentials.json` and `.env` files out of source control to protect sensitive information.
+
+Happy racing! 🏎️🎉
