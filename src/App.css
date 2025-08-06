@@ -25,9 +25,23 @@
   100% { transform: translateX(100vw); }
 }
 
+@keyframes racecar-formation {
+  0% { transform: translateX(-50px) translateY(0); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateX(50px) translateY(-10px); opacity: 0.8; }
+}
+
 @keyframes sparkle {
   0%, 100% { opacity: 0; transform: scale(0); }
   50% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes track-lights {
+  0% { background-color: #ef4444; }
+  25% { background-color: #f59e0b; }
+  50% { background-color: #22c55e; }
+  75% { background-color: #3b82f6; }
+  100% { background-color: #ef4444; }
 }
 
 @keyframes trophy-bounce {

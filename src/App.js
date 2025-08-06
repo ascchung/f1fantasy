@@ -83,27 +83,107 @@ const AppContent = () => {
         <Route
           path="*"
           element={
-            <div className="bg-gradient-to-br from-black via-gray-900 to-red-900 min-h-screen pt-8">
-              <div className="text-center mb-8">
-                <h2 className="text-4xl font-bold text-white mb-4">Welcome to F1 Fantasy</h2>
-                <p className="text-xl text-gray-300">Select a page above to get started!</p>
+            <div className="bg-gradient-to-br from-black via-gray-900 to-red-900 min-h-screen pt-8 relative overflow-hidden">
+              {/* Animated Background Elements */}
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-20 left-10 w-4 h-4 bg-yellow-400 rounded-full animate-ping opacity-75"></div>
+                <div className="absolute top-40 right-20 w-3 h-3 bg-red-500 rounded-full animate-pulse opacity-60"></div>
+                <div className="absolute bottom-32 left-1/4 w-2 h-2 bg-green-400 rounded-full animate-bounce opacity-80"></div>
+                <div className="absolute bottom-20 right-1/3 w-3 h-3 bg-blue-400 rounded-full animate-ping opacity-70"></div>
               </div>
-              <div className="flex justify-center gap-8 px-8">
-                <img
-                  src="/fernando.gif"
-                  alt="Fernando Alonso"
-                  className="w-auto h-auto rounded-2xl shadow-2xl transform hover:scale-105 transition-transform duration-300"
-                />
-                <img 
-                  src="/max.gif" 
-                  alt="Max Verstappen" 
-                  className="w-auto h-auto rounded-2xl shadow-2xl transform hover:scale-105 transition-transform duration-300"
-                />
-                <img 
-                  src="/oscar.gif" 
-                  alt="Oscar Piastri" 
-                  className="w-auto h-auto rounded-2xl shadow-2xl transform hover:scale-105 transition-transform duration-300"
-                />
+
+              <div className="text-center mb-12 relative z-10">
+                <div className="mb-6">
+                  <div className="text-8xl mb-4 animate-bounce">🏁</div>
+                  <h2 className="text-6xl font-bold text-white mb-4 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 bg-clip-text text-transparent">
+                    Welcome to F1 Fantasy
+                  </h2>
+                  <p className="text-2xl text-gray-300 mb-8">The Ultimate Racing Experience</p>
+                </div>
+                
+                <div className="flex justify-center mb-8">
+                  <div className="racing-track relative">
+                    <div className="text-6xl animate-bounce" style={{animationDelay: '0s'}}>🏎️</div>
+                    <div className="absolute -top-2 left-16 text-4xl animate-bounce opacity-75" style={{animationDelay: '0.5s'}}>🏎️</div>
+                    <div className="absolute -top-4 left-28 text-3xl animate-bounce opacity-50" style={{animationDelay: '1s'}}>🏎️</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* F1 Themed Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-8 max-w-6xl mx-auto">
+                {/* Championship Card */}
+                <div className="bg-gradient-to-br from-yellow-600 to-yellow-500 rounded-2xl p-8 shadow-2xl transform hover:scale-105 transition-all duration-300 hover:rotate-1">
+                  <div className="text-center text-black">
+                    <div className="text-5xl mb-4 animate-pulse">🏆</div>
+                    <h3 className="text-2xl font-bold mb-3">Championship</h3>
+                    <p className="text-sm mb-4">Track the leaders and see who's dominating the season</p>
+                    <div className="flex justify-center space-x-2">
+                      <div className="w-3 h-3 bg-black rounded-full animate-bounce"></div>
+                      <div className="w-3 h-3 bg-black rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                      <div className="w-3 h-3 bg-black rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Driver Stats Card */}
+                <div className="bg-gradient-to-br from-blue-600 to-blue-500 rounded-2xl p-8 shadow-2xl transform hover:scale-105 transition-all duration-300 hover:-rotate-1">
+                  <div className="text-center text-white">
+                    <div className="text-5xl mb-4">📊</div>
+                    <h3 className="text-2xl font-bold mb-3">Driver Analytics</h3>
+                    <p className="text-sm mb-4">Deep dive into performance metrics and team comparisons</p>
+                    <div className="relative">
+                      <div className="w-full bg-black bg-opacity-30 rounded-full h-2 mb-2">
+                        <div className="bg-yellow-400 h-2 rounded-full animate-pulse" style={{width: '85%'}}></div>
+                      </div>
+                      <div className="w-full bg-black bg-opacity-30 rounded-full h-2 mb-2">
+                        <div className="bg-red-400 h-2 rounded-full animate-pulse" style={{width: '72%', animationDelay: '0.5s'}}></div>
+                      </div>
+                      <div className="w-full bg-black bg-opacity-30 rounded-full h-2">
+                        <div className="bg-green-400 h-2 rounded-full animate-pulse" style={{width: '68%', animationDelay: '1s'}}></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Fantasy Teams Card */}
+                <div className="bg-gradient-to-br from-green-600 to-green-500 rounded-2xl p-8 shadow-2xl transform hover:scale-105 transition-all duration-300 hover:rotate-1">
+                  <div className="text-center text-white">
+                    <div className="text-5xl mb-4">👥</div>
+                    <h3 className="text-2xl font-bold mb-3">Fantasy Teams</h3>
+                    <p className="text-sm mb-4">Build your dream team and compete with friends</p>
+                    <div className="flex justify-center space-x-1">
+                      {[...Array(5)].map((_, i) => (
+                        <div 
+                          key={i}
+                          className="w-6 h-6 bg-black bg-opacity-30 rounded-full flex items-center justify-center animate-pulse"
+                          style={{animationDelay: `${i * 0.2}s`}}
+                        >
+                          <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Racing Track Animation */}
+              <div className="mt-16 relative">
+                <div className="w-full h-4 bg-gray-700 rounded-full relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white to-transparent opacity-30 animate-pulse"></div>
+                  <div className="racing-stripes absolute inset-0 opacity-20"></div>
+                </div>
+                <div className="text-center mt-4">
+                  <p className="text-gray-400 text-sm">Select a page above to start your F1 Fantasy journey!</p>
+                </div>
+              </div>
+
+              {/* Floating Elements */}
+              <div className="fixed bottom-10 right-10 animate-bounce">
+                <div className="text-3xl opacity-70">🏁</div>
+              </div>
+              <div className="fixed bottom-20 left-10 animate-pulse">
+                <div className="text-2xl opacity-60">⚡</div>
               </div>
             </div>
           }

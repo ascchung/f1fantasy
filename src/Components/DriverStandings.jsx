@@ -11,8 +11,6 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
   Radar,
-  LineChart,
-  Line,
 } from "recharts";
 import { mockDrivers } from "../mockData";
 

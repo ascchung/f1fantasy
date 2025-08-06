@@ -2,10 +2,11 @@
   "name": "f1fantasy",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://ascchung.github.io/f1fantasy",
+  "homepage": "./",
   "scripts": {
     "start": "concurrently \"postcss src/App.css -o src/output.css --watch\" \"react-scripts start\"",
-    "build": "react-scripts build",
+    "build": "postcss src/App.css -o src/output.css && react-scripts build",
+    "build:server": "npm run build && node backend/server.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
