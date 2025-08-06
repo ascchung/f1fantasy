@@ -13,16 +13,28 @@ app.use(
   })
 );
 
-// Serve static files from React build
-app.use(express.static(path.join(__dirname, "../build")));
-
-// API routes
+// API routes first
 app.use("/api/f1-points", f1PointsRoutes);
 
-// Serve React app for all other routes
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../build", "index.html"));
-});
+// Serve static files from React build (if exists)
+const buildPath = path.join(__dirname, "../build");
+if (require("fs").existsSync(buildPath)) {
+  app.use(express.static(buildPath));
+  
+  // Serve React app for all other routes
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(buildPath, "index.html"));
+  });
+} else {
+  // Fallback if build doesn't exist
+  app.get("*", (req, res) => {
+    res.json({ 
+      message: "F1 Fantasy API is running! Frontend build not found.", 
+      api: "/api/f1-points",
+      buildPath: buildPath
+    });
+  });
+}
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
