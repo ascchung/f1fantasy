@@ -54,7 +54,7 @@ const AchievementBadge = ({ type, player, drivers, totalPlayers }) => {
     },
     "Help Needed": {
       emoji: "🆘",
-      condition: (p) => p.total < 20 || p.rank === totalPlayers,
+      condition: (p) => p.rank === totalPlayers,
       color: "from-red-500 to-orange-500",
     },
     "Rookie Lover": {
