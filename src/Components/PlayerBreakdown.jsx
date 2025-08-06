@@ -268,8 +268,9 @@ export default function PlayerBreakdown() {
     });
 
     const sorted = Object.entries(totals)
-      .map(([name, total], index) => ({ name, total, rank: index + 1 }))
-      .sort((a, b) => b.total - a.total);
+      .map(([name, total]) => ({ name, total }))
+      .sort((a, b) => b.total - a.total)
+      .map((player, index) => ({ ...player, rank: index + 1 }));
 
     setPlayerTotals(sorted);
   }, [drivers]);
