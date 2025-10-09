@@ -82,69 +82,6 @@ const AchievementBadge = ({ type, player, drivers, totalPlayers }) => {
   );
 };
 
-const RivalryChart = ({ player1, player2, history }) => {
-  const rivalryData = [
-    {
-      race: "Bahrain",
-      player1: Math.floor(Math.random() * 50),
-      player2: Math.floor(Math.random() * 50),
-    },
-    {
-      race: "Saudi",
-      player1: Math.floor(Math.random() * 50),
-      player2: Math.floor(Math.random() * 50),
-    },
-    {
-      race: "Australia",
-      player1: Math.floor(Math.random() * 50),
-      player2: Math.floor(Math.random() * 50),
-    },
-    {
-      race: "Japan",
-      player1: Math.floor(Math.random() * 50),
-      player2: Math.floor(Math.random() * 50),
-    },
-  ];
-
-  return (
-    <div className="bg-gray-800 bg-opacity-50 backdrop-blur-sm rounded-2xl p-6">
-      <h3 className="text-xl font-bold text-white mb-4 text-center">
-        ⚔️ {player1} vs {player2} ⚔️
-      </h3>
-      <ResponsiveContainer width="100%" height={200}>
-        <LineChart data={rivalryData}>
-          <XAxis dataKey="race" tick={{ fill: "white", fontSize: 12 }} />
-          <YAxis tick={{ fill: "white" }} />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "rgba(0,0,0,0.8)",
-              border: "none",
-              borderRadius: "8px",
-              color: "white",
-            }}
-          />
-          <Line
-            type="monotone"
-            dataKey="player1"
-            stroke="#ff6b6b"
-            strokeWidth={3}
-            dot={{ fill: "#ff6b6b", strokeWidth: 2, r: 6 }}
-            name={player1}
-          />
-          <Line
-            type="monotone"
-            dataKey="player2"
-            stroke="#4ecdc4"
-            strokeWidth={3}
-            dot={{ fill: "#4ecdc4", strokeWidth: 2, r: 6 }}
-            name={player2}
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  );
-};
-
 const AnimatedPointsCounter = ({ targetPoints, duration = 2000 }) => {
   const [currentPoints, setCurrentPoints] = useState(0);
 
