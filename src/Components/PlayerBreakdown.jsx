@@ -170,63 +170,6 @@ const AnimatedPointsCounter = ({ targetPoints, duration = 2000 }) => {
   );
 };
 
-const PredictionGame = () => {
-  const [predictions, setPredictions] = useState({ driver: "", position: "" });
-  const [submitted, setSubmitted] = useState(false);
-
-  const drivers = ["Verstappen", "Hamilton", "Leclerc", "Norris", "Russell"];
-
-  const handleSubmit = () => {
-    if (predictions.driver && predictions.position) {
-      setSubmitted(true);
-      setTimeout(() => setSubmitted(false), 3000);
-    }
-  };
-
-  return (
-    <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-6 text-white">
-      <h3 className="text-xl font-bold mb-4 text-center">
-        🎯 Next Race Prediction
-      </h3>
-      {!submitted ? (
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Who will win?
-            </label>
-            <select
-              value={predictions.driver}
-              onChange={(e) =>
-                setPredictions({ ...predictions, driver: e.target.value })
-              }
-              className="w-full p-2 rounded-lg bg-black bg-opacity-50 text-white"
-            >
-              <option value="">Select Driver</option>
-              {drivers.map((driver) => (
-                <option key={driver} value={driver}>
-                  {driver}
-                </option>
-              ))}
-            </select>
-          </div>
-          <button
-            onClick={handleSubmit}
-            className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-2 px-4 rounded-lg transition-colors"
-          >
-            Submit Prediction
-          </button>
-        </div>
-      ) : (
-        <div className="text-center">
-          <div className="text-4xl mb-2">🎉</div>
-          <p className="text-lg font-bold">Prediction Submitted!</p>
-          <p className="text-sm">+5 bonus points if correct!</p>
-        </div>
-      )}
-    </div>
-  );
-};
-
 export default function PlayerBreakdown() {
   const [drivers, setDrivers] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -301,7 +244,7 @@ export default function PlayerBreakdown() {
         <p className="text-xl text-gray-300">Team Analysis & Rivalries</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
         <div className="lg:col-span-3">
           <h3 className="text-2xl font-bold text-white mb-6">
             🏆 Fantasy League Standings
@@ -401,25 +344,6 @@ export default function PlayerBreakdown() {
               </div>
             ))}
           </div>
-        </div>
-
-        <div className="space-y-6">
-          <PredictionGame />
-
-          {comparison.length === 2 && (
-            <div>
-              <RivalryChart
-                player1={comparison[0].name}
-                player2={comparison[1].name}
-              />
-              <button
-                onClick={() => setComparison([])}
-                className="w-full mt-4 bg-red-500 hover:bg-red-400 text-white font-bold py-2 px-4 rounded-lg"
-              >
-                Clear Comparison
-              </button>
-            </div>
-          )}
         </div>
       </div>
 
