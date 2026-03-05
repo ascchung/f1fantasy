@@ -1,4 +1,4 @@
-# Boaty McBoatface Fantasy F1 2026
+# Fr1ends Fantasy F1 2026
 
 A fantasy F1 league app where players snake-draft drivers, pick constructor teams, and compete across the 2026 season. Scores are calculated automatically from live race results via the Ergast F1 API.
 
