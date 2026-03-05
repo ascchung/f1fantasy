@@ -1,0 +1,35 @@
+{
+  "season": 2026,
+  "players": [
+    {
+      "name": "Alex",
+      "drivers": ["verstappen", "hamilton", "stroll"],
+      "constructor": "Red Bull"
+    },
+    {
+      "name": "Jordan",
+      "drivers": ["leclerc", "sainz", "gasly"],
+      "constructor": "Ferrari"
+    },
+    {
+      "name": "Sam",
+      "drivers": ["norris", "russell", "ocon"],
+      "constructor": "McLaren"
+    },
+    {
+      "name": "Casey",
+      "drivers": ["piastri", "alonso", "tsunoda"],
+      "constructor": "Aston Martin"
+    },
+    {
+      "name": "Morgan",
+      "drivers": ["antonelli", "albon", "hadjar"],
+      "constructor": "Mercedes"
+    },
+    {
+      "name": "Taylor",
+      "drivers": ["colapinto", "paul_aron", "luke_browning"],
+      "constructor": "Alpine"
+    }
+  ]
+}

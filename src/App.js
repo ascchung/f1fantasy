@@ -1,72 +1,58 @@
-import React, { useState } from "react";
-import { HashRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
+import React from "react";
+import {
+  HashRouter as Router,
+  Routes,
+  Route,
+  Link,
+  useLocation,
+} from "react-router-dom";
 import Leaderboard from "./Components/Leaderboard";
 import DriverChart from "./Components/DriverStandings";
 import PlayerBreakdown from "./Components/PlayerBreakdown";
+import FantasyDraft from "./Components/FantasyDraft";
+import Rules from "./Components/Rules";
+import Roster from "./Components/Roster";
+import HallOfFame from "./Components/HallOfFame";
 import "./output.css";
+
+const navItems = [
+  { path: "/leaderboard", label: "Leaderboard" },
+  { path: "/driver-chart", label: "Standings" },
+  { path: "/player-breakdown", label: "Player Teams" },
+  { path: "/draft", label: "Draft" },
+  { path: "/roster", label: "Roster" },
+  { path: "/hall-of-fame", label: "Hall of Fame" },
+  { path: "/rules", label: "Rules" },
+];
 
 const NavigationBar = () => {
   const location = useLocation();
-  const [activeButton, setActiveButton] = useState('');
-
-  const handleNavClick = (path) => {
-    setActiveButton(path);
-    setTimeout(() => setActiveButton(''), 300);
-  };
-
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="bg-gradient-to-r from-red-600 via-black to-red-600 p-6 shadow-2xl">
-      <div className="flex items-end justify-center space-x-4 text-center mb-6">
-        <h1 className="text-4xl text-white font-bold mb-4 italic flex items-center justify-center animate-pulse">
-          <span className="text-5xl mr-3">🏎️</span>
-          <span className="bg-gradient-to-r from-red-400 to-yellow-400 bg-clip-text text-transparent">
-            Boaty McBoatface Fantasy F1 2025
-          </span>
-          <span className="text-5xl ml-3">🏁</span>
-        </h1>
-      </div>
-      
-      <div className="flex gap-6 p-5 justify-center text-center items-center">
+    <div className="bg-card border-b border-gray-700 px-6 py-4">
+      <div className="flex items-center justify-between max-w-7xl mx-auto">
         <Link
-          to="/leaderboard"
-          onClick={() => handleNavClick('/leaderboard')}
-          className={`h-24 px-8 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white font-bold rounded-2xl shadow-lg transform transition-all duration-300 hover:scale-110 hover:rotate-1 flex items-center justify-center relative overflow-hidden ${
-            isActive('/leaderboard') ? 'ring-4 ring-yellow-400 scale-105' : ''
-          } ${activeButton === '/leaderboard' ? 'animate-bounce' : ''}`}
+          to="/"
+          className="text-xl font-semibold text-white tracking-tight"
         >
-          <span className="relative z-10 flex items-center gap-2">
-            🏆 Leaderboard
-          </span>
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 hover:opacity-20 transform -skew-x-12 transition-opacity duration-300" />
+          Fr1ends Fantasy F1 <span className="text-red-500">2026</span>
         </Link>
-        
-        <Link
-          to="/driver-chart"
-          onClick={() => handleNavClick('/driver-chart')}
-          className={`h-24 px-8 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white font-bold rounded-2xl shadow-lg transform transition-all duration-300 hover:scale-110 hover:-rotate-1 flex items-center justify-center relative overflow-hidden ${
-            isActive('/driver-chart') ? 'ring-4 ring-yellow-400 scale-105' : ''
-          } ${activeButton === '/driver-chart' ? 'animate-bounce' : ''}`}
-        >
-          <span className="relative z-10 flex items-center gap-2">
-            📊 Driver Standings
-          </span>
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 hover:opacity-20 transform -skew-x-12 transition-opacity duration-300" />
-        </Link>
-        
-        <Link
-          to="/player-breakdown"
-          onClick={() => handleNavClick('/player-breakdown')}
-          className={`h-24 px-8 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white font-bold rounded-2xl shadow-lg transform transition-all duration-300 hover:scale-110 hover:rotate-1 flex items-center justify-center relative overflow-hidden ${
-            isActive('/player-breakdown') ? 'ring-4 ring-yellow-400 scale-105' : ''
-          } ${activeButton === '/player-breakdown' ? 'animate-bounce' : ''}`}
-        >
-          <span className="relative z-10 flex items-center gap-2">
-            👥 Player Teams
-          </span>
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 hover:opacity-20 transform -skew-x-12 transition-opacity duration-300" />
-        </Link>
+        <div className="flex gap-1">
+          {navItems.map(({ path, label }) => (
+            <Link
+              key={path}
+              to={path}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150 ${
+                isActive(path)
+                  ? "bg-gray-900 text-white"
+                  : "text-gray-400 hover:text-gray-200 hover:bg-gray-900"
+              }`}
+            >
+              {label}
+            </Link>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -74,116 +60,125 @@ const NavigationBar = () => {
 
 const AppContent = () => {
   return (
-    <div>
+    <div className="bg-page min-h-screen">
       <NavigationBar />
       <Routes>
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/driver-chart" element={<DriverChart />} />
         <Route path="/player-breakdown" element={<PlayerBreakdown />} />
+        <Route path="/draft" element={<FantasyDraft />} />
+        <Route path="/rules" element={<Rules />} />
+        <Route path="/roster" element={<Roster />} />
+        <Route path="/hall-of-fame" element={<HallOfFame />} />
         <Route
           path="*"
           element={
-            <div className="bg-gradient-to-br from-black via-gray-900 to-red-900 min-h-screen pt-8 relative overflow-hidden">
-              {/* Animated Background Elements */}
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-20 left-10 w-4 h-4 bg-yellow-400 rounded-full animate-ping opacity-75"></div>
-                <div className="absolute top-40 right-20 w-3 h-3 bg-red-500 rounded-full animate-pulse opacity-60"></div>
-                <div className="absolute bottom-32 left-1/4 w-2 h-2 bg-green-400 rounded-full animate-bounce opacity-80"></div>
-                <div className="absolute bottom-20 right-1/3 w-3 h-3 bg-blue-400 rounded-full animate-ping opacity-70"></div>
-              </div>
-
-              <div className="text-center mb-12 relative z-10">
-                <div className="mb-6">
-                  <div className="text-8xl mb-4 animate-bounce">🏁</div>
-                  <h2 className="text-6xl font-bold text-white mb-4 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 bg-clip-text text-transparent">
-                    Welcome to F1 Fantasy
+            <div className="bg-page min-h-screen">
+              {/* Hero Banner */}
+              <div className="relative w-full h-80 md:h-96 overflow-hidden">
+                <img
+                  src={`${process.env.PUBLIC_URL}/hero-banner.jpg`}
+                  alt="Formula 1 car"
+                  className="w-full h-full object-cover object-center"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-page via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-r from-page via-transparent to-transparent opacity-40" />
+                <div className="absolute bottom-8 left-0 right-0 text-center">
+                  <h2 className="text-5xl md:text-6xl font-bold text-white mb-2 drop-shadow-lg">
+                    Fr1ends Fantasy
                   </h2>
-                  <p className="text-2xl text-gray-300 mb-8">The Ultimate Racing Experience</p>
-                </div>
-                
-                <div className="flex justify-center mb-8">
-                  <div className="racing-track relative">
-                    <div className="text-6xl animate-bounce" style={{animationDelay: '0s'}}>🏎️</div>
-                    <div className="absolute -top-2 left-16 text-4xl animate-bounce opacity-75" style={{animationDelay: '0.5s'}}>🏎️</div>
-                    <div className="absolute -top-4 left-28 text-3xl animate-bounce opacity-50" style={{animationDelay: '1s'}}>🏎️</div>
-                  </div>
+                  <p className="text-xl md:text-2xl text-gray-200 font-light drop-shadow">
+                    Fantasy F1{" "}
+                    <span className="text-red-500 font-semibold">2026</span>
+                  </p>
                 </div>
               </div>
 
-              {/* F1 Themed Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-8 max-w-6xl mx-auto">
-                {/* Championship Card */}
-                <div className="bg-gradient-to-br from-yellow-600 to-yellow-500 rounded-2xl p-8 shadow-2xl transform hover:scale-105 transition-all duration-300 hover:rotate-1">
-                  <div className="text-center text-black">
-                    <div className="text-5xl mb-4 animate-pulse">🏆</div>
-                    <h3 className="text-2xl font-bold mb-3">Championship</h3>
-                    <p className="text-sm mb-4">Track the leaders and see who's dominating the season</p>
-                    <div className="flex justify-center space-x-2">
-                      <div className="w-3 h-3 bg-black rounded-full animate-bounce"></div>
-                      <div className="w-3 h-3 bg-black rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                      <div className="w-3 h-3 bg-black rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+              {/* Quick Stats */}
+              <div className="max-w-5xl mx-auto px-8 -mt-6 relative z-10">
+                <div className="grid grid-cols-3 gap-4 mb-12">
+                  <div className="bg-card rounded-xl p-4 border border-gray-700 text-center">
+                    <div className="text-3xl font-bold text-white">22</div>
+                    <div className="text-xs text-gray-500 uppercase tracking-wider mt-1">
+                      Drivers
                     </div>
                   </div>
-                </div>
-
-                {/* Driver Stats Card */}
-                <div className="bg-gradient-to-br from-blue-600 to-blue-500 rounded-2xl p-8 shadow-2xl transform hover:scale-105 transition-all duration-300 hover:-rotate-1">
-                  <div className="text-center text-white">
-                    <div className="text-5xl mb-4">📊</div>
-                    <h3 className="text-2xl font-bold mb-3">Driver Analytics</h3>
-                    <p className="text-sm mb-4">Deep dive into performance metrics and team comparisons</p>
-                    <div className="relative">
-                      <div className="w-full bg-black bg-opacity-30 rounded-full h-2 mb-2">
-                        <div className="bg-yellow-400 h-2 rounded-full animate-pulse" style={{width: '85%'}}></div>
-                      </div>
-                      <div className="w-full bg-black bg-opacity-30 rounded-full h-2 mb-2">
-                        <div className="bg-red-400 h-2 rounded-full animate-pulse" style={{width: '72%', animationDelay: '0.5s'}}></div>
-                      </div>
-                      <div className="w-full bg-black bg-opacity-30 rounded-full h-2">
-                        <div className="bg-green-400 h-2 rounded-full animate-pulse" style={{width: '68%', animationDelay: '1s'}}></div>
-                      </div>
+                  <div className="bg-card rounded-xl p-4 border border-gray-700 text-center">
+                    <div className="text-3xl font-bold text-white">11</div>
+                    <div className="text-xs text-gray-500 uppercase tracking-wider mt-1">
+                      Teams
                     </div>
                   </div>
-                </div>
-
-                {/* Fantasy Teams Card */}
-                <div className="bg-gradient-to-br from-green-600 to-green-500 rounded-2xl p-8 shadow-2xl transform hover:scale-105 transition-all duration-300 hover:rotate-1">
-                  <div className="text-center text-white">
-                    <div className="text-5xl mb-4">👥</div>
-                    <h3 className="text-2xl font-bold mb-3">Fantasy Teams</h3>
-                    <p className="text-sm mb-4">Build your dream team and compete with friends</p>
-                    <div className="flex justify-center space-x-1">
-                      {[...Array(5)].map((_, i) => (
-                        <div 
-                          key={i}
-                          className="w-6 h-6 bg-black bg-opacity-30 rounded-full flex items-center justify-center animate-pulse"
-                          style={{animationDelay: `${i * 0.2}s`}}
-                        >
-                          <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                        </div>
-                      ))}
+                  <div className="bg-card rounded-xl p-4 border border-gray-700 text-center">
+                    <div className="text-3xl font-bold text-white">24</div>
+                    <div className="text-xs text-gray-500 uppercase tracking-wider mt-1">
+                      Races
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Racing Track Animation */}
-              <div className="mt-16 relative">
-                <div className="w-full h-4 bg-gray-700 rounded-full relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white to-transparent opacity-30 animate-pulse"></div>
-                  <div className="racing-stripes absolute inset-0 opacity-20"></div>
+              {/* Feature Cards */}
+              <div className="max-w-5xl mx-auto px-8 pb-16">
+                <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">
+                  Get Started
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <Link
+                    to="/draft"
+                    className="bg-card rounded-xl p-5 border border-gray-700 hover:border-gray-500 transition-colors group"
+                  >
+                    <div className="text-red-500 text-2xl mb-3">01</div>
+                    <h4 className="text-white font-semibold mb-1 group-hover:text-red-400 transition-colors">
+                      Draft Your Team
+                    </h4>
+                    <p className="text-sm text-gray-500">
+                      Snake draft 3 drivers and pick a constructor
+                    </p>
+                  </Link>
+                  <Link
+                    to="/leaderboard"
+                    className="bg-card rounded-xl p-5 border border-gray-700 hover:border-gray-500 transition-colors group"
+                  >
+                    <div className="text-red-500 text-2xl mb-3">02</div>
+                    <h4 className="text-white font-semibold mb-1 group-hover:text-red-400 transition-colors">
+                      Leaderboard
+                    </h4>
+                    <p className="text-sm text-gray-500">
+                      Track championship standings and podium positions
+                    </p>
+                  </Link>
+                  <Link
+                    to="/driver-chart"
+                    className="bg-card rounded-xl p-5 border border-gray-700 hover:border-gray-500 transition-colors group"
+                  >
+                    <div className="text-red-500 text-2xl mb-3">03</div>
+                    <h4 className="text-white font-semibold mb-1 group-hover:text-red-400 transition-colors">
+                      Driver Standings
+                    </h4>
+                    <p className="text-sm text-gray-500">
+                      Dive into driver performance and analytics
+                    </p>
+                  </Link>
+                  <Link
+                    to="/rules"
+                    className="bg-card rounded-xl p-5 border border-gray-700 hover:border-gray-500 transition-colors group"
+                  >
+                    <div className="text-red-500 text-2xl mb-3">04</div>
+                    <h4 className="text-white font-semibold mb-1 group-hover:text-red-400 transition-colors">
+                      Scoring Rules
+                    </h4>
+                    <p className="text-sm text-gray-500">
+                      Points, bonuses, penalties, and tier breakdowns
+                    </p>
+                  </Link>
                 </div>
-                <div className="text-center mt-4">
-                  <p className="text-gray-400 text-sm">Select a page above to start your F1 Fantasy journey!</p>
-                </div>
-              </div>
 
-              {/* Floating Elements */}
-              <div className="fixed bottom-10 right-10 animate-bounce">
-                <div className="text-3xl opacity-70">🏁</div>
-              </div>
-              <div className="fixed bottom-20 left-10 animate-pulse">
-                <div className="text-2xl opacity-60">⚡</div>
+                <div className="mt-8 text-center">
+                  <p className="text-gray-600 text-xs">
+                    Season 2 of Fr1ends Fantasy F1
+                  </p>
+                </div>
               </div>
             </div>
           }
