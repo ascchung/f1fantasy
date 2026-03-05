@@ -6,18 +6,10 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
 } from "recharts";
-import { mockDrivers } from "../mockData";
-
-const BASE_URL =
-  process.env.NODE_ENV === "development"
-    ? "/api/f1-points"
-    : process.env.REACT_APP_API_URL;
+import { fetchSeasonResults } from "../services/f1Api";
+import { calculateDriverPoints } from "../services/scoringEngine";
+import { getPlayerConfig } from "../services/playerConfig";
 
 const teamColors = {
   "Red Bull": "#1E41FF",
@@ -27,22 +19,27 @@ const teamColors = {
   "Aston Martin": "#006F62",
   Alpine: "#0090FF",
   Williams: "#005AFF",
-  "Kick Sauber": "#52E252",
+  Audi: "#1d1d1b",
   RB: "#6692FF",
   Haas: "#B6BABD",
+  "Racing Bulls": "#6692FF",
+  Cadillac: "#1d1d1b",
 };
 
 const DriverCard = ({ driver, index }) => {
   const [flipped, setFlipped] = useState(false);
-  const teamColor = teamColors[driver.Team] || "#8884d8";
+  const teamColor = teamColors[driver.team] || "#8884d8";
 
-  const momentum = Math.random() > 0.5 ? "up" : "down";
-  const momentumIcon = momentum === "up" ? "📈" : "📉";
-  const momentumColor = momentum === "up" ? "text-green-400" : "text-red-400";
+  const lastRaces = driver.raceResults.slice(-3);
+  const recentTrend = lastRaces.length >= 2
+    ? lastRaces[lastRaces.length - 1].points >= lastRaces[lastRaces.length - 2].points
+    : true;
+  const momentumColor = recentTrend ? "text-green-400" : "text-red-400";
+  const momentumLabel = recentTrend ? "▲" : "▼";
 
   return (
     <div
-      className="perspective-1000 w-full h-32 cursor-pointer"
+      className="perspective-1000 w-full h-28 cursor-pointer"
       onClick={() => setFlipped(!flipped)}
     >
       <div
@@ -51,41 +48,54 @@ const DriverCard = ({ driver, index }) => {
         }`}
       >
         <div
-          className="absolute inset-0 backface-hidden rounded-lg shadow-lg"
+          className="absolute inset-0 backface-hidden rounded-lg border border-gray-700"
           style={{
-            background: `linear-gradient(135deg, ${teamColor}20, ${teamColor}40)`,
+            background: `linear-gradient(135deg, ${teamColor}15, ${teamColor}30)`,
           }}
         >
           <div className="p-4 h-full flex items-center justify-between text-white">
             <div className="flex items-center gap-3">
-              <span className="text-2xl font-bold">P{index + 1}</span>
+              <span className="text-lg font-bold text-gray-400">P{index + 1}</span>
               <div>
-                <div className="font-bold text-lg">{driver.Driver}</div>
-                <div className="text-sm opacity-80">{driver.Team}</div>
+                <div className="font-medium">
+                  {driver.givenName} {driver.familyName}
+                </div>
+                <div className="text-sm text-gray-400">{driver.team}</div>
               </div>
             </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-yellow-400">
-                {driver["Race Points"]}
+            <div className="text-right flex items-center gap-3">
+              <div>
+                <div className="text-xl font-semibold">
+                  {driver.points}
+                </div>
+                <div className="text-xs text-gray-500">pts</div>
               </div>
-              <div className="text-xs opacity-80">points</div>
-              <div className={`text-lg ${momentumColor}`}>{momentumIcon}</div>
+              {driver.raceResults.length > 1 && (
+                <span className={`text-sm ${momentumColor}`}>{momentumLabel}</span>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="absolute inset-0 backface-hidden rotate-y-180 rounded-lg shadow-lg bg-gray-800">
+        <div className="absolute inset-0 backface-hidden rotate-y-180 rounded-lg bg-card border border-gray-700">
           <div className="p-4 h-full flex flex-col justify-center text-white text-center">
-            <div className="text-sm opacity-80 mb-2">Driver Stats</div>
-            <div className="space-y-1">
-              <div className="text-xs">
-                Podiums: {Math.floor(Math.random() * 5)}
+            <div className="text-xs text-gray-400 mb-2 uppercase tracking-wider">Driver Stats</div>
+            <div className="grid grid-cols-4 gap-2 text-xs">
+              <div>
+                <div className="font-medium">{driver.podiums}</div>
+                <div className="text-gray-500">Podiums</div>
               </div>
-              <div className="text-xs">
-                Fastest Laps: {Math.floor(Math.random() * 3)}
+              <div>
+                <div className="font-medium">{driver.fastestLaps}</div>
+                <div className="text-gray-500">FL</div>
               </div>
-              <div className="text-xs">
-                DNFs: {Math.floor(Math.random() * 2)}
+              <div>
+                <div className="font-medium">{driver.dnfs}</div>
+                <div className="text-gray-500">DNFs</div>
+              </div>
+              <div>
+                <div className="font-medium">{driver.raceResults.length}</div>
+                <div className="text-gray-500">Races</div>
               </div>
             </div>
           </div>
@@ -97,113 +107,111 @@ const DriverCard = ({ driver, index }) => {
 
 export default function DriverChart() {
   const [drivers, setDrivers] = useState([]);
-  const [barData, setBarData] = useState([]);
-  const [selectedDrivers, setSelectedDrivers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [season, setSeason] = useState(2026);
 
   useEffect(() => {
-    async function fetchDrivers() {
+    async function loadData() {
       try {
-        if (process.env.NODE_ENV === "development") {
-          // Use mock data in development
-          setDrivers(mockDrivers.data);
-          return;
+        const playersConfig = getPlayerConfig();
+        setSeason(playersConfig.season);
+        const races = await fetchSeasonResults(playersConfig.season);
+        const driverPoints = calculateDriverPoints(races);
+        let driverList = Object.values(driverPoints);
+        if (driverList.length === 0) {
+          const allDriverIds = [...new Set(playersConfig.players.flatMap((p) => p.drivers))];
+          driverList = allDriverIds.map((id) => ({
+            driverId: id,
+            givenName: "",
+            familyName: id.replace(/_/g, " "),
+            team: "TBA",
+            points: 0,
+            podiums: 0,
+            fastestLaps: 0,
+            dnfs: 0,
+            raceResults: [],
+          }));
         }
-
-        const res = await fetch(`${BASE_URL}/drivers`);
-        const json = await res.json();
-        setDrivers(json.data);
+        driverList.sort((a, b) => b.points - a.points);
+        setDrivers(driverList);
       } catch (err) {
-        console.error("Error fetching drivers", err);
-        // Fallback to mock data on error
-        setDrivers(mockDrivers.data);
+        console.error("Error loading driver data:", err);
+        setError("Failed to load race data. Please try again later.");
+      } finally {
+        setLoading(false);
       }
     }
-    fetchDrivers();
+    loadData();
   }, []);
 
-  useEffect(() => {
-    const data = drivers.map((d) => ({
-      driver: d.Driver,
-      points: parseFloat(d["Race Points"]) || 0,
-      fill: teamColors[d.Team] || "#8884d8",
-      team: d.Team,
-    }));
-    setBarData(data);
-  }, [drivers]);
-
-  const sorted = [...drivers].sort(
-    (a, b) => parseFloat(b["Race Points"]) - parseFloat(a["Race Points"])
-  );
-
-  const radarData = selectedDrivers.slice(0, 2).map((driver) => ({
-    name: driver.Driver,
-    speed: Math.floor(Math.random() * 100),
-    consistency: Math.floor(Math.random() * 100),
-    racecraft: Math.floor(Math.random() * 100),
-    qualifying: Math.floor(Math.random() * 100),
-    points: parseFloat(driver["Race Points"]) || 0,
+  const barData = drivers.slice(0, 10).map((d) => ({
+    driver: d.familyName,
+    points: d.points,
+    fill: teamColors[d.team] || "#8884d8",
+    team: d.team,
   }));
 
-  return (
-    <div className="p-4 md:p-6 lg:p-10 bg-gradient-to-br from-gray-900 via-black to-blue-900 min-h-screen">
-      <div className="text-center mb-8">
-        <h2 className="text-5xl font-bold mb-2 text-white bg-gradient-to-r from-blue-500 to-green-500 bg-clip-text text-transparent">
-          🏎️ Driver Championship 🏎️
-        </h2>
-        <p className="text-xl text-gray-300">2025 Season Standings</p>
+  if (loading) {
+    return (
+      <div className="p-10 bg-page min-h-screen flex items-center justify-center">
+        <p className="text-lg text-gray-400">Loading driver standings...</p>
       </div>
+    );
+  }
 
-      <div className="mb-8"></div>
+  if (error) {
+    return (
+      <div className="p-10 bg-page min-h-screen flex items-center justify-center">
+        <p className="text-lg text-red-400">{error}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 md:p-6 lg:p-10 bg-page min-h-screen">
+      <div className="text-center mb-8">
+        <h2 className="text-4xl font-bold mb-2 text-white">
+          Driver Championship
+        </h2>
+        <p className="text-lg text-gray-400">{season} Season Standings</p>
+      </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         <div className="xl:col-span-2">
-          <h3 className="text-2xl font-bold text-white mb-6">
-            🏆 Championship Standings
+          <h3 className="text-lg font-semibold text-gray-300 mb-4 uppercase tracking-wider">
+            Standings
           </h3>
-          <div className="space-y-3">
-            {sorted.map((driver, index) => (
-              <div
-                key={`drv-${driver.Driver}`}
-                onClick={() => {
-                  if (selectedDrivers.includes(driver)) {
-                    setSelectedDrivers(
-                      selectedDrivers.filter((d) => d !== driver)
-                    );
-                  } else if (selectedDrivers.length < 2) {
-                    setSelectedDrivers([...selectedDrivers, driver]);
-                  }
-                }}
-                className={`cursor-pointer transition-all duration-300 ${
-                  selectedDrivers.includes(driver)
-                    ? "ring-4 ring-yellow-400"
-                    : ""
-                }`}
-              >
-                <DriverCard driver={driver} index={index} />
-              </div>
+          <div className="space-y-2">
+            {drivers.map((driver, index) => (
+              <DriverCard
+                key={driver.driverId}
+                driver={driver}
+                index={index}
+              />
             ))}
           </div>
         </div>
 
         <div className="space-y-8">
-          <div className="bg-gray-800 bg-opacity-50 backdrop-blur-sm rounded-2xl p-6">
-            <h3 className="text-xl font-bold text-white mb-4">
-              📊 Points Distribution
+          <div className="bg-card rounded-xl p-6 border border-gray-700">
+            <h3 className="text-lg font-semibold text-gray-300 mb-4 uppercase tracking-wider">
+              Points Distribution
             </h3>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={barData.slice(0, 10)}>
+              <BarChart data={barData}>
                 <XAxis
                   dataKey="driver"
-                  tick={{ fill: "white", fontSize: 10 }}
+                  tick={{ fill: "#9ca3af", fontSize: 10 }}
                   angle={-45}
                   textAnchor="end"
                   height={80}
                 />
-                <YAxis tick={{ fill: "white" }} />
+                <YAxis tick={{ fill: "#9ca3af" }} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "rgba(0,0,0,0.8)",
-                    border: "none",
+                    backgroundColor: "#1f2937",
+                    border: "1px solid #374151",
                     borderRadius: "8px",
                     color: "white",
                   }}
@@ -216,35 +224,6 @@ export default function DriverChart() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-
-          {selectedDrivers.length === 2 && (
-            <div className="bg-gray-800 bg-opacity-50 backdrop-blur-sm rounded-2xl p-6">
-              <h3 className="text-xl font-bold text-white mb-4">
-                ⚡ Head-to-Head Comparison
-              </h3>
-              <ResponsiveContainer width="100%" height={250}>
-                <RadarChart data={radarData}>
-                  <PolarGrid stroke="#374151" />
-                  <PolarAngleAxis tick={{ fill: "white", fontSize: 12 }} />
-                  <PolarRadiusAxis tick={{ fill: "white", fontSize: 10 }} />
-                  <Radar
-                    name={selectedDrivers[0].Driver}
-                    dataKey="speed"
-                    stroke="#ff6b6b"
-                    fill="#ff6b6b"
-                    fillOpacity={0.3}
-                  />
-                  <Radar
-                    name={selectedDrivers[1].Driver}
-                    dataKey="consistency"
-                    stroke="#4ecdc4"
-                    fill="#4ecdc4"
-                    fillOpacity={0.3}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
         </div>
       </div>
     </div>

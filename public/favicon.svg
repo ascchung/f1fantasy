@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="12" fill="#303037"/>
+  <!-- Checkered flag pattern -->
+  <g transform="translate(8,12)">
+    <!-- Row 1 -->
+    <rect x="0" y="0" width="8" height="8" fill="white"/>
+    <rect x="8" y="0" width="8" height="8" fill="#1a1a1f"/>
+    <rect x="16" y="0" width="8" height="8" fill="white"/>
+    <rect x="24" y="0" width="8" height="8" fill="#1a1a1f"/>
+    <rect x="32" y="0" width="8" height="8" fill="white"/>
+    <rect x="40" y="0" width="8" height="8" fill="#1a1a1f"/>
+    <!-- Row 2 -->
+    <rect x="0" y="8" width="8" height="8" fill="#1a1a1f"/>
+    <rect x="8" y="8" width="8" height="8" fill="white"/>
+    <rect x="16" y="8" width="8" height="8" fill="#1a1a1f"/>
+    <rect x="24" y="8" width="8" height="8" fill="white"/>
+    <rect x="32" y="8" width="8" height="8" fill="#1a1a1f"/>
+    <rect x="40" y="8" width="8" height="8" fill="white"/>
+    <!-- Row 3 -->
+    <rect x="0" y="16" width="8" height="8" fill="white"/>
+    <rect x="8" y="16" width="8" height="8" fill="#1a1a1f"/>
+    <rect x="16" y="16" width="8" height="8" fill="white"/>
+    <rect x="24" y="16" width="8" height="8" fill="#1a1a1f"/>
+    <rect x="32" y="16" width="8" height="8" fill="white"/>
+    <rect x="40" y="16" width="8" height="8" fill="#1a1a1f"/>
+    <!-- Row 4 -->
+    <rect x="0" y="24" width="8" height="8" fill="#1a1a1f"/>
+    <rect x="8" y="24" width="8" height="8" fill="white"/>
+    <rect x="16" y="24" width="8" height="8" fill="#1a1a1f"/>
+    <rect x="24" y="24" width="8" height="8" fill="white"/>
+    <rect x="32" y="24" width="8" height="8" fill="#1a1a1f"/>
+    <rect x="40" y="24" width="8" height="8" fill="white"/>
+  </g>
+  <!-- Red accent stripe -->
+  <rect x="0" y="52" width="64" height="4" rx="2" fill="#DC0000"/>
+</svg>
