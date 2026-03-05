@@ -1,6 +1,18 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { getDriverTier, tierInfo, underdogTeams } from "../data/driverTiers";
 
+const DRIVER_NICKNAMES = {
+  sainz: "Smooth Operator",
+  bottas: "Guess Who's Back",
+  perez: "Guess Who's Back",
+};
+
+const tierBadgeColors = {
+  allStar: "text-yellow-300 bg-yellow-900",
+  risingStar: "text-white bg-gray-600",
+  underdog: "text-red-300 bg-red-900",
+};
+
 const DRIVER_POOL = [
   { id: "verstappen", name: "Max Verstappen", team: "Red Bull" },
   { id: "hadjar", name: "Isack Hadjar", team: "Red Bull" },
@@ -489,8 +501,18 @@ export default function FantasyDraft() {
                       {driver.team}
                     </div>
                     {info && (
-                      <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-xs text-gray-300 bg-gray-900">
+                      <span className={`inline-block mt-1 px-1.5 py-0.5 rounded text-xs ${tierBadgeColors[tier]}`}>
                         {info.label}
+                      </span>
+                    )}
+                    {DRIVER_NICKNAMES[driver.id] && (
+                      <span className={`inline-block mt-1 ml-1 px-1.5 py-0.5 rounded text-xs ${DRIVER_NICKNAMES[driver.id] === "Guess Who's Back" ? "text-green-400 bg-green-900" : "text-yellow-300 bg-yellow-900"}`}>
+                        {DRIVER_NICKNAMES[driver.id]}
+                      </span>
+                    )}
+                    {!info && !DRIVER_NICKNAMES[driver.id] && (
+                      <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-xs text-gray-400 bg-gray-700">
+                        Average Joe's
                       </span>
                     )}
                   </button>

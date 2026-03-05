@@ -131,14 +131,40 @@ const TEAMS = [
   },
 ];
 
+const DRIVER_NICKNAMES = {
+  sainz: "Smooth Operator",
+  bottas: "Guess Who's Back",
+  perez: "Guess Who's Back",
+};
+
+const tierBadgeColors = {
+  allStar: "text-yellow-300 bg-yellow-900",
+  risingStar: "text-white bg-gray-600",
+  underdog: "text-red-300 bg-red-900",
+};
+
 function TierBadge({ driverId }) {
   const tier = getDriverTier(driverId);
-  if (!tier) return null;
-  const info = tierInfo[tier];
+  const nickname = DRIVER_NICKNAMES[driverId];
+  const hasTierOrNickname = tier || nickname;
   return (
-    <span className="inline-block ml-2 px-1.5 py-0.5 rounded text-xs text-gray-300 bg-gray-700">
-      {info.label}
-    </span>
+    <>
+      {tier && (
+        <span className={`inline-block ml-2 px-1.5 py-0.5 rounded text-xs ${tierBadgeColors[tier]}`}>
+          {tierInfo[tier].label}
+        </span>
+      )}
+      {nickname && (
+        <span className={`inline-block ml-2 px-1.5 py-0.5 rounded text-xs ${nickname === "Guess Who's Back" ? "text-green-400 bg-green-900" : "text-yellow-300 bg-yellow-900"}`}>
+          {nickname}
+        </span>
+      )}
+      {!hasTierOrNickname && (
+        <span className="inline-block ml-2 px-1.5 py-0.5 rounded text-xs text-gray-400 bg-gray-700">
+          Average Joe's
+        </span>
+      )}
+    </>
   );
 }
 
