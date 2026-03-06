@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   HashRouter as Router,
   Routes,
@@ -27,18 +27,26 @@ const navItems = [
 
 const NavigationBar = () => {
   const location = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
   const isActive = (path) => location.pathname === path;
 
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
   return (
-    <div className="bg-card border-b border-gray-700 px-6 py-4">
+    <nav className="bg-card border-b border-gray-700 px-4 md:px-6 py-3 md:py-4 relative z-50">
       <div className="flex items-center justify-between max-w-7xl mx-auto">
         <Link
           to="/"
-          className="text-xl font-semibold text-white tracking-tight"
+          className="text-lg md:text-xl font-semibold text-white tracking-tight"
         >
           Fr1ends Fantasy F1 <span className="text-red-500">2026</span>
         </Link>
-        <div className="flex gap-1">
+
+        {/* Desktop nav */}
+        <div className="hidden md:flex gap-1">
           {navItems.map(({ path, label }) => (
             <Link
               key={path}
@@ -53,8 +61,46 @@ const NavigationBar = () => {
             </Link>
           ))}
         </div>
+
+        {/* Hamburger button */}
+        <button
+          onClick={() => setMobileOpen(!mobileOpen)}
+          className="md:hidden p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+          aria-label="Toggle menu"
+        >
+          {mobileOpen ? (
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          )}
+        </button>
       </div>
-    </div>
+
+      {/* Mobile menu */}
+      {mobileOpen && (
+        <div className="md:hidden mt-3 pb-1 border-t border-gray-700 pt-3">
+          <div className="flex flex-col gap-1">
+            {navItems.map(({ path, label }) => (
+              <Link
+                key={path}
+                to={path}
+                className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors duration-150 ${
+                  isActive(path)
+                    ? "bg-gray-900 text-white"
+                    : "text-gray-400 hover:text-gray-200 hover:bg-gray-800"
+                }`}
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+    </nav>
   );
 };
 
@@ -95,8 +141,8 @@ const AppContent = () => {
               </div>
 
               {/* Quick Stats */}
-              <div className="max-w-5xl mx-auto px-8 -mt-6 relative z-10">
-                <div className="grid grid-cols-3 gap-4 mb-12">
+              <div className="max-w-5xl mx-auto px-4 md:px-8 -mt-6 relative z-10">
+                <div className="grid grid-cols-3 gap-2 md:gap-4 mb-12">
                   <div className="bg-card rounded-xl p-4 border border-gray-700 text-center">
                     <div className="text-3xl font-bold text-white">22</div>
                     <div className="text-xs text-gray-500 uppercase tracking-wider mt-1">
@@ -119,7 +165,7 @@ const AppContent = () => {
               </div>
 
               {/* Feature Cards */}
-              <div className="max-w-5xl mx-auto px-8 pb-16">
+              <div className="max-w-5xl mx-auto px-4 md:px-8 pb-16">
                 <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">
                   Get Started
                 </h3>

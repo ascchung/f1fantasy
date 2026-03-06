@@ -40,7 +40,7 @@ export default function HallOfFame() {
             </h3>
 
             {/* Podium */}
-            <div className="flex justify-center items-end gap-6 mb-8">
+            <div className="flex justify-center items-end gap-3 md:gap-6 mb-8">
               {season.podium
                 .sort((a, b) => a.position - b.position)
                 .map((entry) => (
@@ -56,7 +56,7 @@ export default function HallOfFame() {
                       </div>
                     </div>
                     <div
-                      className={`w-24 ${podiumHeights[entry.position]} ${podiumColors[entry.position]} rounded-t-lg flex items-end justify-center pb-2`}
+                      className={`w-20 md:w-24 ${podiumHeights[entry.position]} ${podiumColors[entry.position]} rounded-t-lg flex items-end justify-center pb-2`}
                     >
                       <span className="text-black font-bold text-xl">{entry.position}</span>
                     </div>

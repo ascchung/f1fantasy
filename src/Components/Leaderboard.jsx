@@ -21,7 +21,7 @@ const PodiumPosition = ({ player, position, points }) => {
         <div className="text-sm text-gray-400">{points} pts</div>
       </div>
       <div
-        className={`w-24 ${heights[position]} ${colors[position]} rounded-t-lg flex items-end justify-center pb-2`}
+        className={`w-20 md:w-24 ${heights[position]} ${colors[position]} rounded-t-lg flex items-end justify-center pb-2`}
       >
         <span className="text-black font-bold text-2xl">{position}</span>
       </div>
@@ -86,7 +86,7 @@ export default function Leaderboard() {
           <h3 className="text-xl font-semibold text-center text-gray-300 mb-8 uppercase tracking-wider">
             Podium
           </h3>
-          <div className="flex justify-center items-end gap-8 mb-8">
+          <div className="flex justify-center items-end gap-3 md:gap-8 mb-8">
             {podiumPlayers.map((player, index) => (
               <PodiumPosition
                 key={player.name}
@@ -103,7 +103,7 @@ export default function Leaderboard() {
         <h3 className="text-xl font-semibold text-center text-gray-300 mb-6 uppercase tracking-wider">
           Full Championship Table
         </h3>
-        <div className="bg-card rounded-xl border border-gray-700 overflow-hidden">
+        <div className="bg-card rounded-xl border border-gray-700 overflow-x-auto">
           <table className="min-w-full">
             <thead>
               <tr className="bg-gray-900 text-left text-sm font-medium text-gray-400 uppercase tracking-wider">
