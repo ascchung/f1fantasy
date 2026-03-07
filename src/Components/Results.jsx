@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { fetchSeasonResults } from "../services/f1Api";
+import { fetchSeasonResults, fetchSeasonQualifying } from "../services/f1Api";
 import {
   calculateDriverPoints,
   calculatePlayerStandings,
@@ -96,9 +96,12 @@ export default function Results() {
       try {
         const playersConfig = getPlayerConfig();
         setSeason(playersConfig.season);
-        const raceData = await fetchSeasonResults(playersConfig.season);
+        const [raceData, qualifyingData] = await Promise.all([
+          fetchSeasonResults(playersConfig.season),
+          fetchSeasonQualifying(playersConfig.season),
+        ]);
         setRaces(raceData);
-        const dp = calculateDriverPoints(raceData);
+        const dp = calculateDriverPoints(raceData, qualifyingData);
         setDriverPoints(dp);
         const ps = calculatePlayerStandings(dp, playersConfig.players, raceData);
         setStandings(ps);
@@ -330,6 +333,11 @@ export default function Results() {
                         </span>
                       )}
                       <BonusBadge
+                        label={rr.qualiRound || "Quali"}
+                        value={rr.qualifyingBonus}
+                        color="bg-blue-900 text-blue-300"
+                      />
+                      <BonusBadge
                         label="FL"
                         value={rr.fastestLapBonus}
                         color="bg-purple-900 text-purple-300"
@@ -348,6 +356,16 @@ export default function Results() {
                         label="Streak"
                         value={rr.streakBonus}
                         color="bg-green-900 text-green-300"
+                      />
+                      <BonusBadge
+                        label="Streak Breaker"
+                        value={rr.streakBreakerBonus}
+                        color="bg-teal-900 text-teal-300"
+                      />
+                      <BonusBadge
+                        label={`+${rr.placesGained} Places`}
+                        value={rr.placesGainedBonus}
+                        color="bg-emerald-900 text-emerald-300"
                       />
                     </div>
                   </div>

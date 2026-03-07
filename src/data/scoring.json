@@ -1,4 +1,9 @@
 {
+  "qualifyingPoints": {
+    "Q3": 0.5,
+    "Q2": 1,
+    "Q1": 1
+  },
   "racePositionPoints": {
     "1": 10,
     "2": 9,
@@ -16,7 +21,13 @@
     "polePosition": 0.5,
     "dnfPenalty": -1.5,
     "underdogTop5": 6,
+    "underdogTop10": 2,
+    "streakBreaker": 2,
     "podiumStreak": 1,
+    "placesGained5": 1,
+    "placesGained10": 2,
+    "underdogPlacesGained5": 3,
+    "underdogPlacesGained10": 5,
     "teamPodium": 1,
     "underdogTeamPodium": 3
   }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { fetchSeasonResults } from "../services/f1Api";
+import { fetchSeasonResults, fetchSeasonQualifying } from "../services/f1Api";
 import { calculateDriverPoints, calculatePlayerStandings } from "../services/scoringEngine";
 import { getPlayerConfig } from "../services/playerConfig";
 
@@ -40,8 +40,11 @@ export default function Leaderboard() {
       try {
         const playersConfig = getPlayerConfig();
         setSeason(playersConfig.season);
-        const races = await fetchSeasonResults(playersConfig.season);
-        const driverPoints = calculateDriverPoints(races);
+        const [races, qualifyingRaces] = await Promise.all([
+          fetchSeasonResults(playersConfig.season),
+          fetchSeasonQualifying(playersConfig.season),
+        ]);
+        const driverPoints = calculateDriverPoints(races, qualifyingRaces);
         const playerStandings = calculatePlayerStandings(driverPoints, playersConfig.players, races);
         setStandings(playerStandings);
       } catch (err) {

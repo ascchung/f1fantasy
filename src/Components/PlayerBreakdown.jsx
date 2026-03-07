@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { fetchSeasonResults } from "../services/f1Api";
+import { fetchSeasonResults, fetchSeasonQualifying } from "../services/f1Api";
 import { calculateDriverPoints, calculatePlayerStandings } from "../services/scoringEngine";
 import { getPlayerConfig } from "../services/playerConfig";
-import { risingStars, allStars, underdogs } from "../data/driverTiers";
+import { getDriverTier, tierInfo } from "../data/driverTiers";
 
 const teamColors = {
   "Red Bull": "#1E41FF",
@@ -20,76 +20,34 @@ const teamColors = {
   Cadillac: "#1d1d1b",
 };
 
-const AchievementBadge = ({ type, player, totalPlayers }) => {
-  const badges = {
-    "Getting Carried": {
-      label: "Carried",
-      condition: (p) => {
-        if (p.drivers.length === 0 || p.points === 0) return false;
-        const maxPoints = Math.max(...p.drivers.map((d) => d.points));
-        return maxPoints / p.points > 0.8;
-      },
-      color: "bg-purple-900 text-purple-300",
-    },
-    Balanced: {
-      label: "Balanced",
-      condition: (p) => {
-        if (p.drivers.length < 3 || p.points === 0) return false;
-        const driverPoints = p.drivers.map((d) => d.points);
-        const avg = p.points / p.drivers.length;
-        const variance =
-          driverPoints.reduce((sum, pts) => sum + Math.pow(pts - avg, 2), 0) /
-          p.drivers.length;
-        return variance < avg * 0.5;
-      },
-      color: "bg-green-900 text-green-300",
-    },
-    "Help Needed": {
-      label: "Help Needed",
-      condition: (p) => p.rank === totalPlayers,
-      color: "bg-red-900 text-red-300",
-    },
-    "Rising Stars Fan": {
-      label: "Rising Stars",
-      condition: (p) => {
-        const count = p.drivers.filter((d) =>
-          risingStars.includes(d.driverId)
-        ).length;
-        return count >= 2;
-      },
-      color: "bg-cyan-900 text-cyan-300",
-    },
-    "All Star Roster": {
-      label: "All Stars",
-      condition: (p) => {
-        const count = p.drivers.filter((d) =>
-          allStars.includes(d.driverId)
-        ).length;
-        return count >= 2;
-      },
-      color: "bg-yellow-900 text-yellow-300",
-    },
-    "Underdog Believer": {
-      label: "Underdogs",
-      condition: (p) => {
-        const count = p.drivers.filter((d) =>
-          underdogs.includes(d.driverId)
-        ).length;
-        return count >= 2;
-      },
-      color: "bg-orange-900 text-orange-300",
-    },
-  };
+const tierColors = {
+  allStar: "bg-yellow-900 text-yellow-300",
+  risingStar: "bg-cyan-900 text-cyan-300",
+  underdog: "bg-orange-900 text-orange-300",
+};
 
-  const badge = badges[type];
-  if (!badge || !badge.condition(player)) return null;
+const driverNicknames = {
+  sainz: { label: "Smooth Operator", emoji: "😎", color: "bg-red-900 text-red-300" },
+};
 
+function DriverTierBadge({ driverId }) {
+  const nickname = driverNicknames[driverId];
+  if (nickname) {
+    return (
+      <span className={`${nickname.color} px-2 py-0.5 rounded text-xs font-medium`}>
+        {nickname.emoji} {nickname.label}
+      </span>
+    );
+  }
+  const tier = getDriverTier(driverId);
+  if (!tier) return null;
+  const info = tierInfo[tier];
   return (
-    <span className={`${badge.color} px-2 py-0.5 rounded text-xs font-medium`}>
-      {badge.label}
+    <span className={`${tierColors[tier]} px-2 py-0.5 rounded text-xs font-medium`}>
+      {info.emoji} {info.label}
     </span>
   );
-};
+}
 
 const AnimatedPointsCounter = ({ targetPoints, duration = 2000 }) => {
   const [currentPoints, setCurrentPoints] = useState(0);
@@ -126,8 +84,11 @@ export default function PlayerBreakdown() {
     async function loadData() {
       try {
         const playersConfig = getPlayerConfig();
-        const races = await fetchSeasonResults(playersConfig.season);
-        const driverPoints = calculateDriverPoints(races);
+        const [races, qualifyingRaces] = await Promise.all([
+          fetchSeasonResults(playersConfig.season),
+          fetchSeasonQualifying(playersConfig.season),
+        ]);
+        const driverPoints = calculateDriverPoints(races, qualifyingRaces);
         const standings = calculatePlayerStandings(driverPoints, playersConfig.players, races);
         setPlayerStandings(standings);
       } catch (err) {
@@ -216,12 +177,9 @@ export default function PlayerBreakdown() {
               </div>
 
               <div className="flex flex-wrap gap-1">
-                <AchievementBadge type="Getting Carried" player={player} totalPlayers={playerStandings.length} />
-                <AchievementBadge type="Balanced" player={player} totalPlayers={playerStandings.length} />
-                <AchievementBadge type="Help Needed" player={player} totalPlayers={playerStandings.length} />
-                <AchievementBadge type="Rising Stars Fan" player={player} totalPlayers={playerStandings.length} />
-                <AchievementBadge type="All Star Roster" player={player} totalPlayers={playerStandings.length} />
-                <AchievementBadge type="Underdog Believer" player={player} totalPlayers={playerStandings.length} />
+                {player.drivers.map((d) => (
+                  <DriverTierBadge key={d.driverId} driverId={d.driverId} />
+                ))}
               </div>
             </div>
           ))}
@@ -258,8 +216,9 @@ export default function PlayerBreakdown() {
                         #{index + 1}
                       </span>
                       <div>
-                        <div className="font-medium">
+                        <div className="font-medium flex items-center gap-2">
                           {driver.givenName} {driver.familyName}
+                          <DriverTierBadge driverId={driver.driverId} />
                         </div>
                         <div className="text-sm text-gray-400">{driver.team}</div>
                       </div>

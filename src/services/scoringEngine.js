@@ -2,11 +2,35 @@ import scoringConfig from "../data/scoring.json";
 import { underdogs, underdogTeams } from "../data/driverTiers";
 
 /**
+ * Build a lookup of qualifying exit round per driver per race round.
+ * Returns { "1": { "norris": "Q3", "antonelli": "Q1", ... }, "2": { ... } }
+ */
+function buildQualifyingLookup(qualifyingRaces) {
+  const lookup = {};
+  for (const race of qualifyingRaces) {
+    const roundMap = {};
+    for (const qr of race.QualifyingResults || []) {
+      const id = qr.Driver.driverId;
+      if (qr.Q3 && qr.Q3 !== "-") {
+        roundMap[id] = "Q3";
+      } else if (qr.Q2 && qr.Q2 !== "-") {
+        roundMap[id] = "Q2";
+      } else {
+        roundMap[id] = "Q1";
+      }
+    }
+    lookup[race.round] = roundMap;
+  }
+  return lookup;
+}
+
+/**
  * Calculate fantasy points for each driver across all races.
  * Returns a map of driverId -> { driverId, givenName, familyName, team, points, podiums, fastestLaps, dnfs, raceResults }
  */
-export function calculateDriverPoints(races) {
+export function calculateDriverPoints(races, qualifyingRaces = []) {
   const drivers = {};
+  const qualiLookup = buildQualifyingLookup(qualifyingRaces);
 
   for (const race of races) {
     const results = race.Results || [];
@@ -35,6 +59,15 @@ export function calculateDriverPoints(races) {
       let dnfPenaltyVal = 0;
       let underdogBonus = 0;
       let streakBonus = 0;
+      let streakBreakerBonus = 0;
+
+      // Qualifying points
+      const qualiRound = qualiLookup[race.round]?.[id] || null;
+      let qualifyingBonus = 0;
+      if (qualiRound && scoringConfig.qualifyingPoints[qualiRound]) {
+        qualifyingBonus = scoringConfig.qualifyingPoints[qualiRound];
+        racePoints += qualifyingBonus;
+      }
 
       // Fastest lap bonus (must finish in top 10 per real F1 rules)
       const hasFastestLap = result.FastestLap?.rank === "1";
@@ -59,6 +92,39 @@ export function calculateDriverPoints(races) {
       if (pos <= 5 && underdogs.includes(id)) {
         underdogBonus = scoringConfig.bonuses.underdogTop5;
         racePoints += underdogBonus;
+      // Underdog top-10 bonus (P6-P10 only, top 5 already covered above)
+      } else if (pos <= 10 && pos > 5 && underdogs.includes(id)) {
+        underdogBonus = scoringConfig.bonuses.underdogTop10;
+        racePoints += underdogBonus;
+      }
+
+      // Losing streak breaker: bottom 8 (P13+) for 2 consecutive races, then scores points (P1-P10)
+      if (pos <= 10) {
+        const prev = drivers[id].raceResults;
+        if (prev.length >= 2) {
+          const last = prev[prev.length - 1];
+          const secondLast = prev[prev.length - 2];
+          if (last.position >= 13 && secondLast.position >= 13) {
+            streakBreakerBonus = scoringConfig.bonuses.streakBreaker;
+            racePoints += streakBreakerBonus;
+          }
+        }
+      }
+
+      // Places gained bonus (grid must be > 0 to exclude pit lane starts from inflating)
+      const grid = parseInt(result.grid, 10);
+      let placesGainedBonus = 0;
+      const placesGained = grid > 0 ? grid - pos : 0;
+      if (placesGained >= 10) {
+        placesGainedBonus = underdogs.includes(id)
+          ? scoringConfig.bonuses.underdogPlacesGained10
+          : scoringConfig.bonuses.placesGained10;
+        racePoints += placesGainedBonus;
+      } else if (placesGained >= 5) {
+        placesGainedBonus = underdogs.includes(id)
+          ? scoringConfig.bonuses.underdogPlacesGained5
+          : scoringConfig.bonuses.placesGained5;
+        racePoints += placesGainedBonus;
       }
 
       // Podium tracking + consecutive podium streak bonus
@@ -79,12 +145,17 @@ export function calculateDriverPoints(races) {
         points: racePoints,
         status: result.status,
         fastestLap: hasFastestLap,
-        grid: parseInt(result.grid, 10),
+        grid,
+        placesGained,
         basePoints: posPoints,
+        qualifyingBonus,
+        qualiRound,
         fastestLapBonus,
         dnfPenalty: dnfPenaltyVal,
         underdogBonus,
         streakBonus,
+        streakBreakerBonus,
+        placesGainedBonus,
       });
     }
   }

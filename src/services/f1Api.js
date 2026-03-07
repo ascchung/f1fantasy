@@ -35,6 +35,14 @@ export async function fetchRaceResult(year, round) {
   return races[0] || null;
 }
 
+export async function fetchSeasonQualifying(year) {
+  const json = await rateLimitedFetch(
+    `${BASE_URL}/${year}/qualifying/?limit=500`
+  );
+  const races = json.MRData?.RaceTable?.Races || [];
+  return races;
+}
+
 export async function fetchSeasonSchedule(year) {
   const json = await rateLimitedFetch(`${BASE_URL}/${year}/`);
   const races = json.MRData?.RaceTable?.Races || [];

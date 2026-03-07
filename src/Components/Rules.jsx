@@ -1,9 +1,10 @@
 import React from "react";
 import scoringConfig from "../data/scoring.json";
-import { allStars, risingStars, underdogs, tierInfo } from "../data/driverTiers";
+import { allStars, risingStars, underdogs, underdogTeams, tierInfo } from "../data/driverTiers";
 
 const positionPoints = scoringConfig.racePositionPoints;
-const { fastestLap, polePosition, dnfPenalty, underdogTop5, podiumStreak, teamPodium, underdogTeamPodium } = scoringConfig.bonuses;
+const qualifyingPoints = scoringConfig.qualifyingPoints;
+const { fastestLap, polePosition, dnfPenalty, underdogTop5, underdogTop10, streakBreaker, podiumStreak, teamPodium, underdogTeamPodium, placesGained5, placesGained10, underdogPlacesGained5, underdogPlacesGained10 } = scoringConfig.bonuses;
 
 const positionEntries = Object.entries(positionPoints)
   .sort(([a], [b]) => Number(a) - Number(b));
@@ -59,14 +60,39 @@ export default function Rules() {
           <p className="text-gray-600 text-xs mt-3">Positions 11th and below score 0 points.</p>
         </div>
 
+        {/* Qualifying Points */}
+        <div className="bg-card rounded-xl p-6 border border-gray-700">
+          <h3 className="text-lg font-semibold text-white mb-4">Qualifying Points</h3>
+          <p className="text-gray-400 text-sm mb-4">Every driver earns points based on their qualifying exit round. Drivers eliminated earlier get more points to keep underdogs competitive.</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="bg-gray-900 rounded-lg p-4 text-center border border-blue-900">
+              <div className="text-xs text-gray-400 mb-1">Q1 Exit (P16-P20)</div>
+              <div className="text-2xl font-bold text-blue-400">+{qualifyingPoints.Q1}</div>
+              <div className="text-xs text-gray-500 mt-1">eliminated in round 1</div>
+            </div>
+            <div className="bg-gray-900 rounded-lg p-4 text-center border border-blue-900">
+              <div className="text-xs text-gray-400 mb-1">Q2 Exit (P11-P15)</div>
+              <div className="text-2xl font-bold text-blue-400">+{qualifyingPoints.Q2}</div>
+              <div className="text-xs text-gray-500 mt-1">eliminated in round 2</div>
+            </div>
+            <div className="bg-gray-900 rounded-lg p-4 text-center border border-blue-900">
+              <div className="text-xs text-gray-400 mb-1">Q3 (P1-P10)</div>
+              <div className="text-2xl font-bold text-blue-400">+{qualifyingPoints.Q3}</div>
+              <div className="text-xs text-gray-500 mt-1">made it to final round</div>
+            </div>
+          </div>
+        </div>
+
         {/* Bonuses & Penalties */}
         <div className="bg-card rounded-xl p-6 border border-gray-700">
           <h3 className="text-lg font-semibold text-white mb-4">Bonuses & Penalties</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
+
+          <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">Race Bonuses</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
             <div className="bg-gray-900 rounded-lg p-4 text-center border border-gray-700">
               <div className="text-sm font-medium text-gray-300 mb-1">Fastest Lap</div>
               <div className="text-2xl font-bold text-green-400">+{fastestLap}</div>
-              <div className="text-xs text-gray-500 mt-1">bonus point</div>
+              <div className="text-xs text-gray-500 mt-1">must finish top 10</div>
             </div>
 
             <div className="bg-gray-900 rounded-lg p-4 text-center border border-gray-700">
@@ -78,28 +104,89 @@ export default function Rules() {
             <div className="bg-gray-900 rounded-lg p-4 text-center border border-gray-700">
               <div className="text-sm font-medium text-gray-300 mb-1">Podium Streak</div>
               <div className="text-2xl font-bold text-green-400">+{podiumStreak}</div>
-              <div className="text-xs text-gray-500 mt-1">consecutive podiums</div>
+              <div className="text-xs text-gray-500 mt-1">consecutive podiums (P1-P3)</div>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
-            <div className="bg-gray-900 rounded-lg p-4 text-center border border-gray-700">
-              <div className="text-sm font-medium text-gray-300 mb-1">Underdog Top 5</div>
+
+          <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">Places Gained</h4>
+          <p className="text-gray-500 text-xs mb-3">Bonus for finishing higher than your grid position. Underdog drivers earn more.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+            <div className="bg-gray-900 rounded-lg p-4 text-center border border-emerald-900">
+              <div className="text-sm font-medium text-emerald-300 mb-1">5-9 Places Gained</div>
+              <div className="text-2xl font-bold text-green-400">+{placesGained5}</div>
+              <div className="text-xs text-gray-500 mt-1">all drivers</div>
+            </div>
+            <div className="bg-gray-900 rounded-lg p-4 text-center border border-emerald-900">
+              <div className="text-sm font-medium text-emerald-300 mb-1">10+ Places Gained</div>
+              <div className="text-2xl font-bold text-green-400">+{placesGained10}</div>
+              <div className="text-xs text-gray-500 mt-1">all drivers</div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
+            <div className="bg-gray-900 rounded-lg p-4 text-center border border-orange-900">
+              <div className="text-sm font-medium text-orange-300 mb-1">Underdog 5-9 Places</div>
+              <div className="text-2xl font-bold text-green-400">+{underdogPlacesGained5}</div>
+              <div className="text-xs text-gray-500 mt-1">underdog drivers</div>
+            </div>
+            <div className="bg-gray-900 rounded-lg p-4 text-center border border-orange-900">
+              <div className="text-sm font-medium text-orange-300 mb-1">Underdog 10+ Places</div>
+              <div className="text-2xl font-bold text-green-400">+{underdogPlacesGained10}</div>
+              <div className="text-xs text-gray-500 mt-1">underdog drivers</div>
+            </div>
+          </div>
+
+          <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">Underdog Bonuses</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
+            <div className="bg-gray-900 rounded-lg p-4 text-center border border-orange-900">
+              <div className="text-sm font-medium text-orange-300 mb-1">Underdog Top 5</div>
               <div className="text-2xl font-bold text-green-400">+{underdogTop5}</div>
-              <div className="text-xs text-gray-500 mt-1">per race in P1-P5</div>
+              <div className="text-xs text-gray-500 mt-1">underdog driver finishes P1-P5</div>
             </div>
 
+            <div className="bg-gray-900 rounded-lg p-4 text-center border border-orange-900">
+              <div className="text-sm font-medium text-orange-300 mb-1">Underdog Top 10</div>
+              <div className="text-2xl font-bold text-green-400">+{underdogTop10}</div>
+              <div className="text-xs text-gray-500 mt-1">underdog driver finishes P6-P10</div>
+            </div>
+
+            <div className="bg-gray-900 rounded-lg p-4 text-center border border-orange-900">
+              <div className="text-sm font-medium text-orange-300 mb-1">Underdog Team Podium</div>
+              <div className="text-2xl font-bold text-green-400">+{underdogTeamPodium}</div>
+              <div className="text-xs text-gray-500 mt-1">per podium by underdog constructor</div>
+            </div>
+          </div>
+
+          <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">Constructor Bonus</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
             <div className="bg-gray-900 rounded-lg p-4 text-center border border-gray-700">
               <div className="text-sm font-medium text-gray-300 mb-1">Team Podium</div>
               <div className="text-2xl font-bold text-green-400">+{teamPodium}</div>
-              <div className="text-xs text-gray-500 mt-1">per constructor podium</div>
+              <div className="text-xs text-gray-500 mt-1">per podium by your constructor</div>
             </div>
 
             <div className="bg-gray-900 rounded-lg p-4 text-center border border-gray-700">
               <div className="text-sm font-medium text-gray-300 mb-1">Underdog Team Podium</div>
               <div className="text-2xl font-bold text-green-400">+{underdogTeamPodium}</div>
-              <div className="text-xs text-gray-500 mt-1">bottom 5 + Cadillac</div>
+              <div className="text-xs text-gray-500 mt-1">if your constructor is an underdog team</div>
             </div>
           </div>
+
+          <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">Streak Bonuses</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
+            <div className="bg-gray-900 rounded-lg p-4 text-center border border-green-900">
+              <div className="text-sm font-medium text-green-300 mb-1">Podium Streak</div>
+              <div className="text-2xl font-bold text-green-400">+{podiumStreak}</div>
+              <div className="text-xs text-gray-500 mt-1">back-to-back podiums (P1-P3)</div>
+            </div>
+
+            <div className="bg-gray-900 rounded-lg p-4 text-center border border-teal-900">
+              <div className="text-sm font-medium text-teal-300 mb-1">Losing Streak Breaker</div>
+              <div className="text-2xl font-bold text-green-400">+{streakBreaker}</div>
+              <div className="text-xs text-gray-500 mt-1">P13+ for 2 races, then scores points</div>
+            </div>
+          </div>
+
+          <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">Penalties</h4>
           <div className="max-w-xs mx-auto">
             <div className="bg-gray-900 rounded-lg p-4 text-center border border-red-900">
               <div className="text-sm font-medium text-gray-300 mb-1">DNF Penalty</div>
@@ -157,6 +244,19 @@ export default function Rules() {
             </div>
           </div>
           <p className="text-gray-600 text-xs mt-3">Some drivers may appear in multiple tiers. Drivers not in any tier are mid-field veterans.</p>
+        </div>
+
+        {/* Underdog Teams */}
+        <div className="bg-card rounded-xl p-6 border border-gray-700">
+          <h3 className="text-lg font-semibold text-white mb-2">Underdog Constructors</h3>
+          <p className="text-gray-500 text-sm mb-4">Bottom 5 from 2025 constructors standings + Cadillac (new team). These teams earn <span className="text-orange-400 font-medium">+{underdogTeamPodium}</span> per podium instead of <span className="text-white font-medium">+{teamPodium}</span>.</p>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            {underdogTeams.map((team) => (
+              <div key={team} className="bg-orange-900 bg-opacity-30 rounded-lg p-3 text-center border border-orange-800">
+                <div className="text-sm font-medium text-orange-300">{team}</div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Snake Draft Explanation */}
