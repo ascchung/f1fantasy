@@ -25,11 +25,11 @@ export const allStars = [
 // Underdogs: Bottom 6 in 2025 final driver standings
 export const underdogs = [
   "stroll",       // P16 - 33 pts
-  "tsunoda",      // P17 - 33 pts (not on 2026 grid but kept for reference)
+  "perez",        // Veteran, not in top tier for 2026
   "gasly",        // P18 - 22 pts
   "bortoleto",    // P19 - 19 pts (also a Rising Star)
   "colapinto",    // P20 - 0 pts (also a Rising Star)
-  "doohan",       // P21 - 0 pts (not on 2026 grid but kept for reference)
+  "bottas",       // Veteran, not in top tier for 2026
 ];
 
 export function getDriverTier(driverId) {
