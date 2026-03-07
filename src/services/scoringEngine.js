@@ -31,13 +31,18 @@ export function calculateDriverPoints(races) {
         scoringConfig.racePositionPoints[String(pos)] || 0;
 
       let racePoints = posPoints;
+      let fastestLapBonus = 0;
+      let dnfPenaltyVal = 0;
+      let underdogBonus = 0;
+      let streakBonus = 0;
 
       // Fastest lap bonus (must finish in top 10 per real F1 rules)
       const hasFastestLap = result.FastestLap?.rank === "1";
       if (hasFastestLap) {
         drivers[id].fastestLaps++;
         if (pos <= 10) {
-          racePoints += scoringConfig.bonuses.fastestLap;
+          fastestLapBonus = scoringConfig.bonuses.fastestLap;
+          racePoints += fastestLapBonus;
         }
       }
 
@@ -46,12 +51,14 @@ export function calculateDriverPoints(races) {
         result.status !== "Finished" && !result.status?.startsWith("+");
       if (isDnf) {
         drivers[id].dnfs++;
-        racePoints += scoringConfig.bonuses.dnfPenalty;
+        dnfPenaltyVal = scoringConfig.bonuses.dnfPenalty;
+        racePoints += dnfPenaltyVal;
       }
 
       // Underdog top-5 bonus
       if (pos <= 5 && underdogs.includes(id)) {
-        racePoints += scoringConfig.bonuses.underdogTop5;
+        underdogBonus = scoringConfig.bonuses.underdogTop5;
+        racePoints += underdogBonus;
       }
 
       // Podium tracking + consecutive podium streak bonus
@@ -59,7 +66,8 @@ export function calculateDriverPoints(races) {
         drivers[id].podiums++;
         const prevResults = drivers[id].raceResults;
         if (prevResults.length > 0 && prevResults[prevResults.length - 1].position <= 3) {
-          racePoints += scoringConfig.bonuses.podiumStreak;
+          streakBonus = scoringConfig.bonuses.podiumStreak;
+          racePoints += streakBonus;
         }
       }
 
@@ -72,6 +80,11 @@ export function calculateDriverPoints(races) {
         status: result.status,
         fastestLap: hasFastestLap,
         grid: parseInt(result.grid, 10),
+        basePoints: posPoints,
+        fastestLapBonus,
+        dnfPenalty: dnfPenaltyVal,
+        underdogBonus,
+        streakBonus,
       });
     }
   }

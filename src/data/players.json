@@ -2,34 +2,39 @@
   "season": 2026,
   "players": [
     {
-      "name": "Alex",
-      "drivers": ["verstappen", "hamilton", "stroll"],
-      "constructor": "Red Bull"
+      "name": "Steph",
+      "drivers": ["verstappen", "bottas", "colapinto"],
+      "constructor": "Williams"
     },
     {
-      "name": "Jordan",
-      "drivers": ["leclerc", "sainz", "gasly"],
-      "constructor": "Ferrari"
-    },
-    {
-      "name": "Sam",
-      "drivers": ["norris", "russell", "ocon"],
-      "constructor": "McLaren"
-    },
-    {
-      "name": "Casey",
-      "drivers": ["piastri", "alonso", "tsunoda"],
-      "constructor": "Aston Martin"
-    },
-    {
-      "name": "Morgan",
-      "drivers": ["antonelli", "albon", "hadjar"],
+      "name": "Ryan",
+      "drivers": ["piastri", "lawson", "gasly"],
       "constructor": "Mercedes"
     },
     {
       "name": "Taylor",
-      "drivers": ["colapinto", "paul_aron", "luke_browning"],
-      "constructor": "Alpine"
+      "drivers": ["norris", "bearman", "albon"],
+      "constructor": "McLaren"
+    },
+    {
+      "name": "Chris",
+      "drivers": ["hamilton", "lindblad", "hulkenberg"],
+      "constructor": "Red Bull"
+    },
+    {
+      "name": "Andrew",
+      "drivers": ["leclerc", "russell", "bortoleto"],
+      "constructor": "Ferrari"
+    },
+    {
+      "name": "Ivan",
+      "drivers": ["antonelli", "hadjar", "ocon"],
+      "constructor": "Haas"
+    },
+    {
+      "name": "Ashley",
+      "drivers": ["sainz", "perez", "alonso"],
+      "constructor": "Racing Bulls"
     }
   ]
 }

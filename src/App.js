@@ -13,12 +13,14 @@ import FantasyDraft from "./Components/FantasyDraft";
 import Rules from "./Components/Rules";
 import Roster from "./Components/Roster";
 import HallOfFame from "./Components/HallOfFame";
+import Results from "./Components/Results";
 import "./output.css";
 
 const navItems = [
   { path: "/leaderboard", label: "Leaderboard" },
   { path: "/driver-chart", label: "Standings" },
   { path: "/player-breakdown", label: "Player Teams" },
+  { path: "/results", label: "Results" },
   { path: "/draft", label: "Draft" },
   { path: "/roster", label: "Roster" },
   { path: "/hall-of-fame", label: "Hall of Fame" },
@@ -112,6 +114,7 @@ const AppContent = () => {
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/driver-chart" element={<DriverChart />} />
         <Route path="/player-breakdown" element={<PlayerBreakdown />} />
+        <Route path="/results" element={<Results />} />
         <Route path="/draft" element={<FantasyDraft />} />
         <Route path="/rules" element={<Rules />} />
         <Route path="/roster" element={<Roster />} />

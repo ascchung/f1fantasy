@@ -15,9 +15,9 @@
     "fastestLap": 1,
     "polePosition": 0.5,
     "dnfPenalty": -1.5,
-    "underdogTop5": 2,
-    "podiumStreak": 0.5,
-    "teamPodium": 0.5,
-    "underdogTeamPodium": 1
+    "underdogTop5": 6,
+    "podiumStreak": 1,
+    "teamPodium": 1,
+    "underdogTeamPodium": 3
   }
 }
