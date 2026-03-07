@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { fetchSeasonResults, fetchSeasonQualifying } from "../services/f1Api";
+import { fetchSeasonResults, fetchSeasonQualifying, fetchSeasonSprints } from "../services/f1Api";
 import {
   calculateDriverPoints,
   calculatePlayerStandings,
@@ -96,12 +96,13 @@ export default function Results() {
       try {
         const playersConfig = getPlayerConfig();
         setSeason(playersConfig.season);
-        const [raceData, qualifyingData] = await Promise.all([
+        const [raceData, qualifyingData, sprintData] = await Promise.all([
           fetchSeasonResults(playersConfig.season),
           fetchSeasonQualifying(playersConfig.season),
+          fetchSeasonSprints(playersConfig.season),
         ]);
         setRaces(raceData);
-        const dp = calculateDriverPoints(raceData, qualifyingData);
+        const dp = calculateDriverPoints(raceData, qualifyingData, sprintData);
         setDriverPoints(dp);
         const ps = calculatePlayerStandings(dp, playersConfig.players, raceData);
         setStandings(ps);
@@ -336,6 +337,11 @@ export default function Results() {
                         label={rr.qualiRound || "Quali"}
                         value={rr.qualifyingBonus}
                         color="bg-blue-900 text-blue-300"
+                      />
+                      <BonusBadge
+                        label={`Sprint P${rr.sprintPosition}`}
+                        value={rr.sprintPoints}
+                        color="bg-yellow-900 text-yellow-300"
                       />
                       <BonusBadge
                         label="FL"

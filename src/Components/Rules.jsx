@@ -33,7 +33,7 @@ export default function Rules() {
         {/* Race Position Points */}
         <div className="bg-card rounded-xl p-6 border border-gray-700">
           <h3 className="text-lg font-semibold text-white mb-4">Race Finish Points</h3>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+          <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
             {positionEntries.map(([pos, pts]) => (
               <div
                 key={pos}
@@ -57,7 +57,40 @@ export default function Rules() {
               </div>
             ))}
           </div>
-          <p className="text-gray-600 text-xs mt-3">Positions 11th and below score 0 points.</p>
+          <p className="text-gray-600 text-xs mt-3">Positions 16th and below score 0 points.</p>
+        </div>
+
+        {/* Sprint Race Points */}
+        <div className="bg-card rounded-xl p-6 border border-gray-700">
+          <h3 className="text-lg font-semibold text-white mb-4">Sprint Race Points</h3>
+          <p className="text-gray-400 text-sm mb-4">Sprint races award points to the top 8 finishers. Sprint points are added to that round's total.</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {Object.entries(scoringConfig.sprintPositionPoints)
+              .sort(([a], [b]) => Number(a) - Number(b))
+              .map(([pos, pts]) => (
+                <div
+                  key={`sprint-${pos}`}
+                  className={`rounded-lg p-3 text-center ${
+                    pos === "1"
+                      ? "bg-yellow-900 border border-yellow-700"
+                      : pos === "2"
+                      ? "bg-gray-700 border border-gray-500"
+                      : pos === "3"
+                      ? "bg-orange-900 border border-orange-700"
+                      : "bg-gray-900 border border-gray-700"
+                  }`}
+                >
+                  <div className="text-xs text-gray-400 mb-1">P{pos}</div>
+                  <div className={`text-xl font-bold ${
+                    pos === "1" ? "text-yellow-400" : pos === "2" ? "text-gray-300" : pos === "3" ? "text-orange-400" : "text-white"
+                  }`}>
+                    {pts}
+                  </div>
+                  <div className="text-xs text-gray-500">pts</div>
+                </div>
+              ))}
+          </div>
+          <p className="text-gray-600 text-xs mt-3">Not every race weekend has a sprint. Sprint points stack with the main race for that round.</p>
         </div>
 
         {/* Qualifying Points */}
@@ -277,16 +310,17 @@ export default function Rules() {
         <div className="bg-card rounded-xl p-6 border border-gray-700">
           <h3 className="text-lg font-semibold text-white mb-3">Scoring Example</h3>
           <div className="text-gray-400 text-sm space-y-2">
-            <p>If your driver finishes <span className="font-medium text-white">P1</span>, sets the <span className="font-medium text-white">fastest lap</span>, and started from <span className="font-medium text-white">pole position</span>:</p>
+            <p>If your driver qualifies <span className="font-medium text-white">in Q3</span>, wins the <span className="font-medium text-white">sprint</span>, finishes <span className="font-medium text-white">P1</span> in the race, and sets the <span className="font-medium text-white">fastest lap</span>:</p>
             <div className="bg-gray-900 rounded-lg p-3 font-mono text-xs space-y-1 border border-gray-700">
+              <div>Qualifying (Q3):        <span className="text-blue-400">+{qualifyingPoints.Q3}</span></div>
+              <div>Sprint win (P1):        <span className="text-yellow-400">+{scoringConfig.sprintPositionPoints["1"]}</span></div>
               <div>Race win (P1):          <span className="text-white">+{positionPoints["1"]}</span></div>
               <div>Fastest lap bonus:      <span className="text-green-400">+{fastestLap}</span></div>
-              <div>Pole position bonus:    <span className="text-green-400">+{polePosition}</span></div>
               <div className="border-t border-gray-700 pt-1 text-white font-medium">
-                Total:                  {positionPoints["1"] + fastestLap + polePosition} pts
+                Total:                  {qualifyingPoints.Q3 + scoringConfig.sprintPositionPoints["1"] + positionPoints["1"] + fastestLap} pts
               </div>
             </div>
-            <p className="text-xs text-gray-500">If that same driver DNF'd instead, they'd score {dnfPenalty} pts (just the penalty, no position points).</p>
+            <p className="text-xs text-gray-500">If that same driver DNF'd in the race instead, they'd still keep qualifying and sprint points, but get {dnfPenalty} penalty (no race position points).</p>
           </div>
         </div>
       </div>

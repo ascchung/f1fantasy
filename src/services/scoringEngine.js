@@ -28,9 +28,22 @@ function buildQualifyingLookup(qualifyingRaces) {
  * Calculate fantasy points for each driver across all races.
  * Returns a map of driverId -> { driverId, givenName, familyName, team, points, podiums, fastestLaps, dnfs, raceResults }
  */
-export function calculateDriverPoints(races, qualifyingRaces = []) {
+export function calculateDriverPoints(races, qualifyingRaces = [], sprintRaces = []) {
   const drivers = {};
   const qualiLookup = buildQualifyingLookup(qualifyingRaces);
+
+  // Build sprint results lookup: { round: { driverId: { position, points } } }
+  const sprintLookup = {};
+  for (const race of sprintRaces) {
+    const roundMap = {};
+    for (const result of race.SprintResults || []) {
+      const id = result.Driver.driverId;
+      const pos = parseInt(result.position, 10);
+      const pts = scoringConfig.sprintPositionPoints[String(pos)] || 0;
+      roundMap[id] = { position: pos, points: pts };
+    }
+    sprintLookup[race.round] = roundMap;
+  }
 
   for (const race of races) {
     const results = race.Results || [];
@@ -60,6 +73,11 @@ export function calculateDriverPoints(races, qualifyingRaces = []) {
       let underdogBonus = 0;
       let streakBonus = 0;
       let streakBreakerBonus = 0;
+
+      // Sprint points
+      const sprintResult = sprintLookup[race.round]?.[id] || null;
+      const sprintPoints = sprintResult?.points || 0;
+      racePoints += sprintPoints;
 
       // Qualifying points
       const qualiRound = qualiLookup[race.round]?.[id] || null;
@@ -148,6 +166,8 @@ export function calculateDriverPoints(races, qualifyingRaces = []) {
         grid,
         placesGained,
         basePoints: posPoints,
+        sprintPoints,
+        sprintPosition: sprintResult?.position || null,
         qualifyingBonus,
         qualiRound,
         fastestLapBonus,

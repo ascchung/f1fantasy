@@ -43,6 +43,14 @@ export async function fetchSeasonQualifying(year) {
   return races;
 }
 
+export async function fetchSeasonSprints(year) {
+  const json = await rateLimitedFetch(
+    `${BASE_URL}/${year}/sprint/?limit=500`
+  );
+  const races = json.MRData?.RaceTable?.Races || [];
+  return races;
+}
+
 export async function fetchSeasonSchedule(year) {
   const json = await rateLimitedFetch(`${BASE_URL}/${year}/`);
   const races = json.MRData?.RaceTable?.Races || [];

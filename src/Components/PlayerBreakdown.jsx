@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { fetchSeasonResults, fetchSeasonQualifying } from "../services/f1Api";
+import { fetchSeasonResults, fetchSeasonQualifying, fetchSeasonSprints } from "../services/f1Api";
 import { calculateDriverPoints, calculatePlayerStandings } from "../services/scoringEngine";
 import { getPlayerConfig } from "../services/playerConfig";
 import { getDriverTier, tierInfo } from "../data/driverTiers";
@@ -84,11 +84,12 @@ export default function PlayerBreakdown() {
     async function loadData() {
       try {
         const playersConfig = getPlayerConfig();
-        const [races, qualifyingRaces] = await Promise.all([
+        const [races, qualifyingRaces, sprintRaces] = await Promise.all([
           fetchSeasonResults(playersConfig.season),
           fetchSeasonQualifying(playersConfig.season),
+          fetchSeasonSprints(playersConfig.season),
         ]);
-        const driverPoints = calculateDriverPoints(races, qualifyingRaces);
+        const driverPoints = calculateDriverPoints(races, qualifyingRaces, sprintRaces);
         const standings = calculatePlayerStandings(driverPoints, playersConfig.players, races);
         setPlayerStandings(standings);
       } catch (err) {
