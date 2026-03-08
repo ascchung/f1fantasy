@@ -1,1 +1,26 @@
-{}
+{
+  "1": {
+    "russell": { "grid": 1, "qualifyingRound": "Q3", "dnf": false },
+    "antonelli": { "grid": 2, "qualifyingRound": "Q3", "dnf": false },
+    "hadjar": { "grid": 3, "qualifyingRound": "Q3", "dnf": true },
+    "leclerc": { "grid": 4, "qualifyingRound": "Q3", "dnf": false },
+    "piastri": { "grid": 5, "qualifyingRound": "Q3", "dnf": true },
+    "norris": { "grid": 6, "qualifyingRound": "Q3", "dnf": false },
+    "hamilton": { "grid": 7, "qualifyingRound": "Q3", "dnf": false },
+    "lawson": { "grid": 8, "qualifyingRound": "Q3", "dnf": false },
+    "lindblad": { "grid": 9, "qualifyingRound": "Q3", "dnf": false },
+    "bortoleto": { "grid": 10, "qualifyingRound": "Q3", "dnf": false },
+    "hulkenberg": { "grid": 11, "qualifyingRound": "Q2", "dnf": true },
+    "bearman": { "grid": 12, "qualifyingRound": "Q2", "dnf": false },
+    "ocon": { "grid": 13, "qualifyingRound": "Q2", "dnf": false },
+    "gasly": { "grid": 14, "qualifyingRound": "Q2", "dnf": false },
+    "albon": { "grid": 15, "qualifyingRound": "Q2", "dnf": false },
+    "colapinto": { "grid": 16, "qualifyingRound": "Q1", "dnf": false },
+    "alonso": { "grid": 17, "qualifyingRound": "Q1", "dnf": true },
+    "perez": { "grid": 18, "qualifyingRound": "Q1", "dnf": false },
+    "bottas": { "grid": 19, "qualifyingRound": "Q1", "dnf": true },
+    "verstappen": { "grid": 20, "qualifyingRound": "Q1", "dnf": false },
+    "sainz": { "grid": 21, "qualifyingRound": "Q1", "dnf": false },
+    "stroll": { "grid": 22, "qualifyingRound": "Q1", "dnf": false }
+  }
+}

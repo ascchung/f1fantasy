@@ -73,7 +73,7 @@ export default function Admin() {
         ? `${result.Driver.givenName} ${result.Driver.familyName}`
         : driverId,
       team: result?.Constructor?.name || "",
-      grid: existing?.grid ?? (result?.grid !== "0" ? parseInt(result.grid) : ""),
+      grid: existing?.grid ?? (result && result.grid !== "0" ? parseInt(result.grid) : ""),
       qualifyingRound: existing?.qualifyingRound ?? inferredQuali,
       dnf: existing?.dnf ?? (result?.status === "Retired"),
       apiGrid: result?.grid || "0",
@@ -91,16 +91,42 @@ export default function Admin() {
     });
   }
 
-  function handleAutoFillGrid() {
-    if (!selectedQuali?.QualifyingResults) return;
+  function handleAutoFillAll() {
+    if (!selectedRace?.Results) return;
     setOverrides((prev) => {
       const next = JSON.parse(JSON.stringify(prev));
       if (!next[selectedRound]) next[selectedRound] = {};
-      for (const qr of selectedQuali.QualifyingResults) {
-        const id = qr.Driver.driverId;
+
+      for (const result of selectedRace.Results) {
+        const id = result.Driver.driverId;
         if (!next[selectedRound][id]) next[selectedRound][id] = {};
-        if (!next[selectedRound][id].grid && next[selectedRound][id].grid !== 0) {
-          next[selectedRound][id].grid = parseInt(qr.position) || 0;
+        const entry = next[selectedRound][id];
+
+        // Grid from qualifying position
+        if (entry.grid === undefined) {
+          const qualiResult = selectedQuali?.QualifyingResults?.find(
+            (q) => q.Driver.driverId === id
+          );
+          entry.grid = qualiResult ? parseInt(qualiResult.position) || 0 : 0;
+        }
+
+        // Qualifying round from Q fields
+        if (!entry.qualifyingRound) {
+          const qualiResult = selectedQuali?.QualifyingResults?.find(
+            (q) => q.Driver.driverId === id
+          );
+          if (qualiResult) {
+            if (qualiResult.Q3 && qualiResult.Q3 !== "-") entry.qualifyingRound = "Q3";
+            else if (qualiResult.Q2 && qualiResult.Q2 !== "-") entry.qualifyingRound = "Q2";
+            else entry.qualifyingRound = "Q1";
+          } else {
+            entry.qualifyingRound = "Q1";
+          }
+        }
+
+        // DNF from status
+        if (entry.dnf === undefined) {
+          entry.dnf = result.status === "Retired";
         }
       }
       return next;
@@ -212,10 +238,10 @@ export default function Admin() {
       {/* Quick actions */}
       <div className="max-w-4xl mx-auto mb-4 flex flex-wrap gap-2">
         <button
-          onClick={handleAutoFillGrid}
+          onClick={handleAutoFillAll}
           className="px-4 py-2 bg-blue-700 hover:bg-blue-600 text-white text-sm rounded-lg transition-colors"
         >
-          Auto-fill grid from quali positions
+          Auto-fill all fields
         </button>
         <button
           onClick={handleMarkAllFinished}

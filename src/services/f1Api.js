@@ -257,7 +257,10 @@ export async function fetchSeasonResults(year) {
 
     let races = (await Promise.all(racePromises)).filter(Boolean);
 
-    // Ergast enrichment: grid positions, accurate status, better race names
+    // Ergast enrichment: grid positions, better race names
+    // Note: We only take race names and grid from Ergast. Status is NOT taken
+    // because Ergast uses "Lapped" (not "+N Laps") which the scoring engine
+    // would treat as DNF. Our OpenF1 heuristic + manual overrides are more accurate.
     try {
       const ergastJson = await fetchErgastJSON(
         `${ERGAST_BASE}/${year}/results/?limit=500`
@@ -275,7 +278,6 @@ export async function fetchSeasonResults(year) {
             );
             if (ergastResult) {
               result.grid = ergastResult.grid || result.grid;
-              result.status = ergastResult.status || result.status;
             }
           }
         }
@@ -296,8 +298,12 @@ export async function fetchSeasonResults(year) {
         }
         if (driverOverride.dnf === true) {
           result.status = "Retired";
-        } else if (driverOverride.dnf === false && result.status === "Retired") {
-          result.status = "Finished";
+        } else if (driverOverride.dnf === false) {
+          // Ensure status is scoring-compatible (not "Lapped", "Did not start", etc.)
+          const isBadStatus = result.status !== "Finished" && !result.status?.startsWith("+");
+          if (isBadStatus) {
+            result.status = "Finished";
+          }
         }
       }
     }
