@@ -14,6 +14,7 @@ import Rules from "./Components/Rules";
 import Roster from "./Components/Roster";
 import HallOfFame from "./Components/HallOfFame";
 import Results from "./Components/Results";
+import Admin from "./Components/Admin";
 import "./output.css";
 
 const navItems = [
@@ -119,6 +120,7 @@ const AppContent = () => {
         <Route path="/rules" element={<Rules />} />
         <Route path="/roster" element={<Roster />} />
         <Route path="/hall-of-fame" element={<HallOfFame />} />
+        <Route path="/admin" element={<Admin />} />
         <Route
           path="*"
           element={
