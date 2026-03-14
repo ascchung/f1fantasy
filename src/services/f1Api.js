@@ -479,6 +479,32 @@ export async function fetchRaceResult(year, round) {
   return races.find((r) => r.round === String(round)) || null;
 }
 
+export async function fetchDriverStandings(year) {
+  return cachedFetch(`driverStandings_${year}`, async () => {
+    try {
+      const ergastJson = await fetchErgastJSON(
+        `${ERGAST_BASE}/${year}/driverStandings/?limit=30`
+      );
+      const lists = ergastJson?.MRData?.StandingsTable?.StandingsLists || [];
+      if (lists.length > 0) {
+        const standings = {};
+        for (const entry of lists[0].DriverStandings || []) {
+          const driverId = normalizeDriverId(entry.Driver.driverId);
+          standings[driverId] = {
+            position: parseInt(entry.positionText) || 0,
+            points: parseFloat(entry.points) || 0,
+            wins: parseInt(entry.wins) || 0,
+          };
+        }
+        return standings;
+      }
+    } catch (e) {
+      // Standings unavailable
+    }
+    return {};
+  });
+}
+
 export async function fetchSeasonSchedule(year) {
   return cachedFetch(`schedule_${year}`, async () => {
     // 1. Try Ergast for schedule

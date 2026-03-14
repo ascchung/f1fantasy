@@ -7,7 +7,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { fetchSeasonResults, fetchSeasonQualifying, fetchSeasonSprints } from "../services/f1Api";
+import { fetchSeasonResults, fetchSeasonQualifying, fetchSeasonSprints, fetchDriverStandings } from "../services/f1Api";
 import { calculateDriverPoints } from "../services/scoringEngine";
 import { getPlayerConfig } from "../services/playerConfig";
 
@@ -66,7 +66,7 @@ const DriverCard = ({ driver, index }) => {
             <div className="text-right flex items-center gap-3">
               <div>
                 <div className="text-xl font-semibold">
-                  {driver.points}
+                  {driver.wdcPoints != null ? driver.wdcPoints : driver.points}
                 </div>
                 <div className="text-xs text-gray-500">pts</div>
               </div>
@@ -82,6 +82,10 @@ const DriverCard = ({ driver, index }) => {
             <div className="text-xs text-gray-400 mb-2 uppercase tracking-wider">Driver Stats</div>
             <div className="grid grid-cols-4 gap-2 text-xs">
               <div>
+                <div className="font-medium">{driver.wdcWins || 0}</div>
+                <div className="text-gray-500">Wins</div>
+              </div>
+              <div>
                 <div className="font-medium">{driver.podiums}</div>
                 <div className="text-gray-500">Podiums</div>
               </div>
@@ -92,10 +96,6 @@ const DriverCard = ({ driver, index }) => {
               <div>
                 <div className="font-medium">{driver.dnfs}</div>
                 <div className="text-gray-500">DNFs</div>
-              </div>
-              <div>
-                <div className="font-medium">{driver.raceResults.length}</div>
-                <div className="text-gray-500">Races</div>
               </div>
             </div>
           </div>
@@ -116,10 +116,11 @@ export default function DriverChart() {
       try {
         const playersConfig = getPlayerConfig();
         setSeason(playersConfig.season);
-        const [races, qualifyingRaces, sprintRaces] = await Promise.all([
+        const [races, qualifyingRaces, sprintRaces, wdcStandings] = await Promise.all([
           fetchSeasonResults(playersConfig.season),
           fetchSeasonQualifying(playersConfig.season),
           fetchSeasonSprints(playersConfig.season),
+          fetchDriverStandings(playersConfig.season),
         ]);
         const driverPoints = calculateDriverPoints(races, qualifyingRaces, sprintRaces);
         let driverList = Object.values(driverPoints);
@@ -137,7 +138,17 @@ export default function DriverChart() {
             raceResults: [],
           }));
         }
-        driverList.sort((a, b) => b.points - a.points);
+        // Merge actual F1 WDC standings
+        for (const driver of driverList) {
+          const wdc = wdcStandings[driver.driverId];
+          if (wdc) {
+            driver.wdcPoints = wdc.points;
+            driver.wdcPosition = wdc.position;
+            driver.wdcWins = wdc.wins;
+          }
+        }
+        // Sort by actual F1 points (WDC), fall back to fantasy points
+        driverList.sort((a, b) => (b.wdcPoints ?? b.points) - (a.wdcPoints ?? a.points));
         setDrivers(driverList);
       } catch (err) {
         console.error("Error loading driver data:", err);
@@ -151,7 +162,7 @@ export default function DriverChart() {
 
   const barData = drivers.slice(0, 10).map((d) => ({
     driver: d.familyName,
-    points: d.points,
+    points: d.wdcPoints != null ? d.wdcPoints : d.points,
     fill: teamColors[d.team] || "#8884d8",
     team: d.team,
   }));
