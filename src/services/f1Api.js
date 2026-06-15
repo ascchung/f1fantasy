@@ -141,12 +141,36 @@ function extractFinalPositions(positionEntries) {
   return latest;
 }
 
-function buildMeetingToRound(raceSessions) {
+// Build a date→{round, raceName} map from the Ergast schedule
+// Used to assign proper round numbers to OpenF1 sessions
+function buildDateToScheduleMap(schedule) {
   const map = {};
-  raceSessions.forEach((s, i) => {
-    map[s.meeting_key] = String(i + 1);
-  });
+  for (const race of schedule) {
+    if (race.date) {
+      map[race.date] = { round: race.round, raceName: race.raceName };
+    }
+  }
   return map;
+}
+
+// Match an OpenF1 session to a schedule entry by date
+// OpenF1 date_start is ISO like "2026-03-08T05:00:00+00:00"
+// Schedule date is "2026-03-08"
+function findScheduleEntryForSession(session, dateToSchedule) {
+  if (!session.date_start) return null;
+  const sessionDate = session.date_start.split("T")[0];
+  // Try exact match first
+  if (dateToSchedule[sessionDate]) return dateToSchedule[sessionDate];
+  // For qualifying/sprint, the session date may be 1-2 days before the race date
+  // Try matching by meeting_key through nearby dates (±2 days)
+  const d = new Date(sessionDate);
+  for (let offset = 1; offset <= 2; offset++) {
+    const later = new Date(d);
+    later.setDate(later.getDate() + offset);
+    const laterStr = later.toISOString().split("T")[0];
+    if (dateToSchedule[laterStr]) return dateToSchedule[laterStr];
+  }
+  return null;
 }
 
 function toDriverId(lastName) {
@@ -251,90 +275,96 @@ export async function fetchSeasonResults(year) {
       // Fall through to OpenF1
     }
 
-    // 2. If Ergast returned nothing, try OpenF1 as fallback
-    if (races.length === 0) {
-      try {
-        const allSessions = await getAllSessions(year);
-        const raceSessions = allSessions
-          .filter((s) => s.session_name === "Race")
-          .sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
+    // 2. Supplement with OpenF1 for any rounds Ergast is missing
+    try {
+      const ergastRounds = new Set(races.map((r) => r.round));
 
-        if (raceSessions.length > 0) {
-          const countryCounts = {};
-          for (const s of raceSessions) {
-            const name = s.country_name || "";
-            countryCounts[name] = (countryCounts[name] || 0) + 1;
+      const [allSessions, schedule] = await Promise.all([
+        getAllSessions(year),
+        fetchSeasonSchedule(year),
+      ]);
+      const dateToSchedule = buildDateToScheduleMap(schedule);
+
+      const raceSessions = allSessions
+        .filter((s) => s.session_name === "Race")
+        .sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
+
+      // Only process sessions whose round is NOT already covered by Ergast
+      const missingSessions = raceSessions.filter((session) => {
+        const entry = findScheduleEntryForSession(session, dateToSchedule);
+        return entry && !ergastRounds.has(entry.round);
+      });
+
+      if (missingSessions.length > 0) {
+        const racePromises = missingSessions.map(async (session) => {
+          const entry = findScheduleEntryForSession(session, dateToSchedule);
+          if (!entry) return null;
+
+          const [positions, drivers, laps] = await Promise.all([
+            fetchJSON(`${OPENF1_BASE}/position?session_key=${session.session_key}`),
+            fetchJSON(`${OPENF1_BASE}/drivers?session_key=${session.session_key}`),
+            fetchJSON(`${OPENF1_BASE}/laps?session_key=${session.session_key}`),
+          ]);
+
+          if (!positions || positions.length === 0) return null;
+          const finalPositions = extractFinalPositions(positions);
+          if (Object.keys(finalPositions).length === 0) return null;
+
+          let fastestLapDriver = null;
+          let fastestLapTime = Infinity;
+          for (const lap of laps) {
+            if (lap.lap_duration && lap.lap_duration > 0 && !lap.is_pit_out_lap) {
+              if (lap.lap_duration < fastestLapTime) {
+                fastestLapTime = lap.lap_duration;
+                fastestLapDriver = lap.driver_number;
+              }
+            }
           }
-          const getRaceName = (session) => {
-            const country = session.country_name || session.location || "Unknown";
-            return countryCounts[country] > 1
-              ? `${session.location || country} Grand Prix`
-              : `${country} Grand Prix`;
-          };
 
-          const racePromises = raceSessions.map(async (session, index) => {
-            const [positions, drivers, laps] = await Promise.all([
-              fetchJSON(`${OPENF1_BASE}/position?session_key=${session.session_key}`),
-              fetchJSON(`${OPENF1_BASE}/drivers?session_key=${session.session_key}`),
-              fetchJSON(`${OPENF1_BASE}/laps?session_key=${session.session_key}`),
-            ]);
+          const driverMaxLap = {};
+          for (const lap of laps) {
+            if (lap.driver_number && lap.lap_number) {
+              const num = lap.driver_number;
+              driverMaxLap[num] = Math.max(driverMaxLap[num] || 0, lap.lap_number);
+            }
+          }
+          const maxLapsInRace = Math.max(...Object.values(driverMaxLap), 0);
 
-            if (!positions || positions.length === 0) return null;
-            const finalPositions = extractFinalPositions(positions);
-            if (Object.keys(finalPositions).length === 0) return null;
-
-            let fastestLapDriver = null;
-            let fastestLapTime = Infinity;
-            for (const lap of laps) {
-              if (lap.lap_duration && lap.lap_duration > 0 && !lap.is_pit_out_lap) {
-                if (lap.lap_duration < fastestLapTime) {
-                  fastestLapTime = lap.lap_duration;
-                  fastestLapDriver = lap.driver_number;
+          const results = Object.entries(finalPositions)
+            .sort((a, b) => a[1].position - b[1].position)
+            .map(([numStr, posData]) => {
+              const num = parseInt(numStr);
+              const dInfo = resolveDriver(num, drivers);
+              const completedLaps = driverMaxLap[num] || 0;
+              let status = "Finished";
+              if (maxLapsInRace > 0 && completedLaps > 0) {
+                if (completedLaps < maxLapsInRace * 0.9) status = "Retired";
+                else if (completedLaps < maxLapsInRace) {
+                  const lapsDown = maxLapsInRace - completedLaps;
+                  status = `+${lapsDown} Lap${lapsDown > 1 ? "s" : ""}`;
                 }
               }
-            }
+              return {
+                position: String(posData.position),
+                Driver: { driverId: dInfo.driverId, givenName: dInfo.givenName, familyName: dInfo.familyName },
+                Constructor: { name: dInfo.team },
+                FastestLap: num === fastestLapDriver ? { rank: "1" } : undefined,
+                status,
+                grid: "0",
+              };
+            });
 
-            const driverMaxLap = {};
-            for (const lap of laps) {
-              if (lap.driver_number && lap.lap_number) {
-                const num = lap.driver_number;
-                driverMaxLap[num] = Math.max(driverMaxLap[num] || 0, lap.lap_number);
-              }
-            }
-            const maxLapsInRace = Math.max(...Object.values(driverMaxLap), 0);
+          return { round: entry.round, raceName: entry.raceName, Results: results };
+        });
 
-            const results = Object.entries(finalPositions)
-              .sort((a, b) => a[1].position - b[1].position)
-              .map(([numStr, posData]) => {
-                const num = parseInt(numStr);
-                const dInfo = resolveDriver(num, drivers);
-                const completedLaps = driverMaxLap[num] || 0;
-                let status = "Finished";
-                if (maxLapsInRace > 0 && completedLaps > 0) {
-                  if (completedLaps < maxLapsInRace * 0.9) status = "Retired";
-                  else if (completedLaps < maxLapsInRace) {
-                    const lapsDown = maxLapsInRace - completedLaps;
-                    status = `+${lapsDown} Lap${lapsDown > 1 ? "s" : ""}`;
-                  }
-                }
-                return {
-                  position: String(posData.position),
-                  Driver: { driverId: dInfo.driverId, givenName: dInfo.givenName, familyName: dInfo.familyName },
-                  Constructor: { name: dInfo.team },
-                  FastestLap: num === fastestLapDriver ? { rank: "1" } : undefined,
-                  status,
-                  grid: "0",
-                };
-              });
-
-            return { round: String(index + 1), raceName: getRaceName(session), Results: results };
-          });
-
-          races = (await Promise.all(racePromises)).filter(Boolean);
-        }
-      } catch (e) {
-        // Both sources failed
+        const supplementalRaces = (await Promise.all(racePromises)).filter(Boolean);
+        races = races.concat(supplementalRaces);
       }
+
+      // Sort by round number
+      races.sort((a, b) => parseInt(a.round) - parseInt(b.round));
+    } catch (e) {
+      // OpenF1 supplement failed, continue with Ergast-only data
     }
 
     // 3. Manual overrides: final authority for grid, DNF status
@@ -368,19 +398,30 @@ export async function fetchSeasonQualifying(year) {
       // Fall through to OpenF1
     }
 
-    // 2. Fallback: infer Q1/Q2/Q3 from OpenF1 qualifying positions
-    if (qualiData.length === 0) {
-      try {
-        const allSessions = await getAllSessions(year);
-        const qualiSessions = allSessions
-          .filter((s) => s.session_name === "Qualifying")
-          .sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
-        const raceSessions = allSessions
-          .filter((s) => s.session_name === "Race")
-          .sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
-        const meetingToRound = buildMeetingToRound(raceSessions);
+    // 2. Supplement with OpenF1 for any rounds Ergast is missing
+    try {
+      const ergastRounds = new Set(qualiData.map((r) => r.round));
 
-        const qualiPromises = qualiSessions.map(async (session) => {
+      const [allSessions, schedule] = await Promise.all([
+        getAllSessions(year),
+        fetchSeasonSchedule(year),
+      ]);
+      const dateToSchedule = buildDateToScheduleMap(schedule);
+
+      const qualiSessions = allSessions
+        .filter((s) => s.session_name === "Qualifying")
+        .sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
+
+      const missingSessions = qualiSessions.filter((session) => {
+        const entry = findScheduleEntryForSession(session, dateToSchedule);
+        return entry && !ergastRounds.has(entry.round);
+      });
+
+      if (missingSessions.length > 0) {
+        const qualiPromises = missingSessions.map(async (session) => {
+          const entry = findScheduleEntryForSession(session, dateToSchedule);
+          if (!entry) return null;
+
           const [positions, drivers] = await Promise.all([
             fetchJSON(`${OPENF1_BASE}/position?session_key=${session.session_key}`),
             fetchJSON(`${OPENF1_BASE}/drivers?session_key=${session.session_key}`),
@@ -400,13 +441,17 @@ export async function fetchSeasonQualifying(year) {
               return { Driver: { driverId: dInfo.driverId }, position: String(pos), Q1: q1, Q2: q2, Q3: q3 };
             });
 
-          return { round: meetingToRound[session.meeting_key] || "0", QualifyingResults: qualifyingResults };
+          return { round: entry.round, raceName: entry.raceName, QualifyingResults: qualifyingResults };
         });
 
-        qualiData = (await Promise.all(qualiPromises)).filter(Boolean);
-      } catch (e) {
-        // Both sources failed
+        const supplementalQuali = (await Promise.all(qualiPromises)).filter(Boolean);
+        qualiData = qualiData.concat(supplementalQuali);
       }
+
+      // Sort by round number
+      qualiData.sort((a, b) => parseInt(a.round) - parseInt(b.round));
+    } catch (e) {
+      // OpenF1 supplement failed, continue with Ergast-only data
     }
 
     // 3. Manual overrides: final authority for qualifying rounds
@@ -418,6 +463,8 @@ export async function fetchSeasonQualifying(year) {
 
 export async function fetchSeasonSprints(year) {
   return cachedFetch(`sprints_${year}`, async () => {
+    let sprintData = [];
+
     // 1. Try Ergast first
     try {
       const ergastJson = await fetchErgastJSON(
@@ -425,7 +472,7 @@ export async function fetchSeasonSprints(year) {
       );
       const ergastRaces = ergastJson?.MRData?.RaceTable?.Races || [];
       if (ergastRaces.length > 0) {
-        return ergastRaces.map((race) => ({
+        sprintData = ergastRaces.map((race) => ({
           ...race,
           SprintResults: (race.SprintResults || []).map((r) => ({
             ...r,
@@ -437,40 +484,59 @@ export async function fetchSeasonSprints(year) {
       // Fall through to OpenF1
     }
 
-    // 2. Fallback: OpenF1 sprint positions
+    // 2. Supplement with OpenF1 for any rounds Ergast is missing
     try {
-      const allSessions = await getAllSessions(year);
+      const ergastRounds = new Set(sprintData.map((r) => r.round));
+
+      const [allSessions, schedule] = await Promise.all([
+        getAllSessions(year),
+        fetchSeasonSchedule(year),
+      ]);
+      const dateToSchedule = buildDateToScheduleMap(schedule);
+
       const sprintSessions = allSessions
         .filter((s) => s.session_name === "Sprint")
         .sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
-      const raceSessions = allSessions
-        .filter((s) => s.session_name === "Race")
-        .sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
-      const meetingToRound = buildMeetingToRound(raceSessions);
 
-      const sprintPromises = sprintSessions.map(async (session) => {
-        const [positions, drivers] = await Promise.all([
-          fetchJSON(`${OPENF1_BASE}/position?session_key=${session.session_key}`),
-          fetchJSON(`${OPENF1_BASE}/drivers?session_key=${session.session_key}`),
-        ]);
-        if (!positions || positions.length === 0) return null;
-
-        const finalPos = extractFinalPositions(positions);
-        const sprintResults = Object.entries(finalPos)
-          .sort((a, b) => a[1].position - b[1].position)
-          .map(([numStr, posData]) => {
-            const num = parseInt(numStr);
-            const dInfo = resolveDriver(num, drivers);
-            return { position: String(posData.position), Driver: { driverId: dInfo.driverId } };
-          });
-
-        return { round: meetingToRound[session.meeting_key] || "0", SprintResults: sprintResults };
+      const missingSessions = sprintSessions.filter((session) => {
+        const entry = findScheduleEntryForSession(session, dateToSchedule);
+        return entry && !ergastRounds.has(entry.round);
       });
 
-      return (await Promise.all(sprintPromises)).filter(Boolean);
+      if (missingSessions.length > 0) {
+        const sprintPromises = missingSessions.map(async (session) => {
+          const entry = findScheduleEntryForSession(session, dateToSchedule);
+          if (!entry) return null;
+
+          const [positions, drivers] = await Promise.all([
+            fetchJSON(`${OPENF1_BASE}/position?session_key=${session.session_key}`),
+            fetchJSON(`${OPENF1_BASE}/drivers?session_key=${session.session_key}`),
+          ]);
+          if (!positions || positions.length === 0) return null;
+
+          const finalPos = extractFinalPositions(positions);
+          const sprintResults = Object.entries(finalPos)
+            .sort((a, b) => a[1].position - b[1].position)
+            .map(([numStr, posData]) => {
+              const num = parseInt(numStr);
+              const dInfo = resolveDriver(num, drivers);
+              return { position: String(posData.position), Driver: { driverId: dInfo.driverId } };
+            });
+
+          return { round: entry.round, raceName: entry.raceName, SprintResults: sprintResults };
+        });
+
+        const supplementalSprints = (await Promise.all(sprintPromises)).filter(Boolean);
+        sprintData = sprintData.concat(supplementalSprints);
+      }
+
+      // Sort by round number
+      sprintData.sort((a, b) => parseInt(a.round) - parseInt(b.round));
     } catch (e) {
-      return [];
+      // OpenF1 supplement failed, continue with Ergast-only data
     }
+
+    return sprintData;
   });
 }
 
