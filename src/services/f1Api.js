@@ -292,8 +292,13 @@ export async function fetchSeasonResults(year) {
       // Only process sessions whose round is NOT already covered by Ergast
       const missingSessions = raceSessions.filter((session) => {
         const entry = findScheduleEntryForSession(session, dateToSchedule);
+        if (!entry) {
+          console.warn(`[f1Api] No schedule match for OpenF1 session: ${session.country_name} (${session.date_start})`);
+        }
         return entry && !ergastRounds.has(entry.round);
       });
+
+      console.log(`[f1Api] Ergast has rounds: [${[...ergastRounds].join(",")}], OpenF1 supplementing ${missingSessions.length} missing races`);
 
       if (missingSessions.length > 0) {
         const racePromises = missingSessions.map(async (session) => {
@@ -306,7 +311,10 @@ export async function fetchSeasonResults(year) {
             fetchJSON(`${OPENF1_BASE}/laps?session_key=${session.session_key}`),
           ]);
 
-          if (!positions || positions.length === 0) return null;
+          if (!positions || positions.length === 0) {
+            console.warn(`[f1Api] No position data for ${entry.raceName} (round ${entry.round}, session ${session.session_key})`);
+            return null;
+          }
           const finalPositions = extractFinalPositions(positions);
           if (Object.keys(finalPositions).length === 0) return null;
 
@@ -358,13 +366,14 @@ export async function fetchSeasonResults(year) {
         });
 
         const supplementalRaces = (await Promise.all(racePromises)).filter(Boolean);
+        console.log(`[f1Api] OpenF1 supplemented ${supplementalRaces.length} races: ${supplementalRaces.map(r => `R${r.round} ${r.raceName}`).join(", ")}`);
         races = races.concat(supplementalRaces);
       }
 
       // Sort by round number
       races.sort((a, b) => parseInt(a.round) - parseInt(b.round));
     } catch (e) {
-      // OpenF1 supplement failed, continue with Ergast-only data
+      console.warn("[f1Api] OpenF1 supplement failed:", e.message);
     }
 
     // 3. Manual overrides: final authority for grid, DNF status
