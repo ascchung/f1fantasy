@@ -87,15 +87,26 @@ function normalizeStatus(status) {
 
 // ---- Fetching Helpers ----
 
-async function fetchJSON(url) {
-  try {
-    const resp = await fetch(url);
-    if (!resp.ok) return [];
-    return resp.json();
-  } catch (e) {
-    console.warn(`Fetch failed: ${url}`, e.message);
-    return [];
+async function fetchJSON(url, retries = 2) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const resp = await fetch(url);
+      if (resp.status === 429 || (resp.status >= 500 && attempt < retries)) {
+        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+        continue;
+      }
+      if (!resp.ok) return [];
+      return await resp.json();
+    } catch (e) {
+      if (attempt < retries) {
+        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+        continue;
+      }
+      console.warn(`Fetch failed: ${url}`, e.message);
+      return [];
+    }
   }
+  return [];
 }
 
 async function fetchErgastJSON(url) {
@@ -289,8 +300,10 @@ export async function fetchSeasonResults(year) {
         .filter((s) => s.session_name === "Race")
         .sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
 
-      // Only process sessions whose round is NOT already covered by Ergast
+      // Only process past sessions whose round is NOT already covered by Ergast
+      const now = new Date();
       const missingSessions = raceSessions.filter((session) => {
+        if (new Date(session.date_start) > now) return false;
         const entry = findScheduleEntryForSession(session, dateToSchedule);
         if (!entry) {
           console.warn(`[f1Api] No schedule match for OpenF1 session: ${session.country_name} (${session.date_start})`);
@@ -421,7 +434,9 @@ export async function fetchSeasonQualifying(year) {
         .filter((s) => s.session_name === "Qualifying")
         .sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
 
+      const now = new Date();
       const missingSessions = qualiSessions.filter((session) => {
+        if (new Date(session.date_start) > now) return false;
         const entry = findScheduleEntryForSession(session, dateToSchedule);
         return entry && !ergastRounds.has(entry.round);
       });
@@ -507,7 +522,9 @@ export async function fetchSeasonSprints(year) {
         .filter((s) => s.session_name === "Sprint")
         .sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
 
+      const now = new Date();
       const missingSessions = sprintSessions.filter((session) => {
+        if (new Date(session.date_start) > now) return false;
         const entry = findScheduleEntryForSession(session, dateToSchedule);
         return entry && !ergastRounds.has(entry.round);
       });
