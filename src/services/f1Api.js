@@ -29,6 +29,7 @@ const DRIVER_MAP_2026 = {
   77: { driverId: "bottas",     givenName: "Valtteri",  familyName: "Bottas",     team: "Cadillac" },
   81: { driverId: "piastri",    givenName: "Oscar",     familyName: "Piastri",    team: "McLaren" },
   87: { driverId: "bearman",    givenName: "Oliver",    familyName: "Bearman",    team: "Haas" },
+  22: { driverId: "tsunoda",    givenName: "Yuki",      familyName: "Tsunoda",    team: "Racing Bulls" },
 };
 
 // Reverse lookup: driverId -> driver info
@@ -42,6 +43,7 @@ for (const d of Object.values(DRIVER_MAP_2026)) {
 const ERGAST_ID_NORMALIZE = {
   "max_verstappen": "verstappen",
   "arvid_lindblad": "lindblad",
+  "yuki_tsunoda": "tsunoda",
 };
 
 function normalizeDriverId(ergastId) {
@@ -109,26 +111,87 @@ async function fetchJSON(url, retries = 2) {
   return [];
 }
 
-async function fetchErgastJSON(url) {
+async function fetchErgastJSON(url, retries = 2) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const resp = await fetch(url);
+      if (resp.status === 429 || (resp.status >= 500 && attempt < retries)) {
+        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+        continue;
+      }
+      if (!resp.ok) return null;
+      return await resp.json();
+    } catch (e) {
+      if (attempt < retries) {
+        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+        continue;
+      }
+      console.warn(`Ergast fetch failed: ${url}`, e.message);
+      return null;
+    }
+  }
+  return null;
+}
+
+// ---- Promise-based Cache with localStorage fallback ----
+const CACHE_VERSION = "v2";
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+const cache = {};
+
+function getLocalCache(key) {
   try {
-    const resp = await fetch(url);
-    if (!resp.ok) return null;
-    return resp.json();
-  } catch (e) {
-    console.warn(`Ergast fetch failed: ${url}`, e.message);
+    const raw = localStorage.getItem(`f1f_${CACHE_VERSION}_${key}`);
+    if (!raw) return null;
+    const { data, timestamp } = JSON.parse(raw);
+    if (Date.now() - timestamp > CACHE_TTL_MS) {
+      localStorage.removeItem(`f1f_${CACHE_VERSION}_${key}`);
+      return null;
+    }
+    return data;
+  } catch {
     return null;
   }
 }
 
-// ---- Promise-based Cache ----
-const cache = {};
+function setLocalCache(key, data) {
+  try {
+    localStorage.setItem(`f1f_${CACHE_VERSION}_${key}`, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch {
+    // localStorage full or unavailable, ignore
+  }
+}
+
+function localCacheLength(data) {
+  if (Array.isArray(data)) return data.length;
+  if (data && typeof data === "object") return Object.keys(data).length;
+  return 0;
+}
 
 function cachedFetch(key, fetchFn) {
   if (!cache[key]) {
-    cache[key] = fetchFn().catch((err) => {
-      delete cache[key];
-      throw err;
-    });
+    cache[key] = fetchFn()
+      .then((result) => {
+        const cached = getLocalCache(key);
+        // Only save to localStorage if we got equal or more data than what's cached
+        if (!cached || localCacheLength(result) >= localCacheLength(cached)) {
+          setLocalCache(key, result);
+        } else {
+          // Fresh fetch returned less data than cache — use cached version
+          console.warn(`[f1Api] Fresh fetch for "${key}" returned ${localCacheLength(result)} items, cache has ${localCacheLength(cached)}. Using cache.`);
+          return cached;
+        }
+        return result;
+      })
+      .catch((err) => {
+        delete cache[key];
+        // On failure, fall back to localStorage if available
+        const cached = getLocalCache(key);
+        if (cached) {
+          console.warn(`[f1Api] Fetch failed for "${key}", using cached data.`);
+          return cached;
+        }
+        throw err;
+      });
   }
   return cache[key];
 }
@@ -314,9 +377,11 @@ export async function fetchSeasonResults(year) {
       console.log(`[f1Api] Ergast has rounds: [${[...ergastRounds].join(",")}], OpenF1 supplementing ${missingSessions.length} missing races`);
 
       if (missingSessions.length > 0) {
-        const racePromises = missingSessions.map(async (session) => {
+        // Process sequentially to avoid OpenF1 rate limiting
+        const supplementalRaces = [];
+        for (const session of missingSessions) {
           const entry = findScheduleEntryForSession(session, dateToSchedule);
-          if (!entry) return null;
+          if (!entry) continue;
 
           const [positions, drivers, laps] = await Promise.all([
             fetchJSON(`${OPENF1_BASE}/position?session_key=${session.session_key}`),
@@ -326,10 +391,10 @@ export async function fetchSeasonResults(year) {
 
           if (!positions || positions.length === 0) {
             console.warn(`[f1Api] No position data for ${entry.raceName} (round ${entry.round}, session ${session.session_key})`);
-            return null;
+            continue;
           }
           const finalPositions = extractFinalPositions(positions);
-          if (Object.keys(finalPositions).length === 0) return null;
+          if (Object.keys(finalPositions).length === 0) continue;
 
           let fastestLapDriver = null;
           let fastestLapTime = Infinity;
@@ -375,10 +440,13 @@ export async function fetchSeasonResults(year) {
               };
             });
 
-          return { round: entry.round, raceName: entry.raceName, Results: results };
-        });
+          supplementalRaces.push({ round: entry.round, raceName: entry.raceName, Results: results });
 
-        const supplementalRaces = (await Promise.all(racePromises)).filter(Boolean);
+          // Small delay between sessions to avoid rate limiting
+          if (missingSessions.indexOf(session) < missingSessions.length - 1) {
+            await new Promise((r) => setTimeout(r, 300));
+          }
+        }
         console.log(`[f1Api] OpenF1 supplemented ${supplementalRaces.length} races: ${supplementalRaces.map(r => `R${r.round} ${r.raceName}`).join(", ")}`);
         races = races.concat(supplementalRaces);
       }
@@ -442,15 +510,16 @@ export async function fetchSeasonQualifying(year) {
       });
 
       if (missingSessions.length > 0) {
-        const qualiPromises = missingSessions.map(async (session) => {
+        // Process sequentially to avoid OpenF1 rate limiting
+        for (const session of missingSessions) {
           const entry = findScheduleEntryForSession(session, dateToSchedule);
-          if (!entry) return null;
+          if (!entry) continue;
 
           const [positions, drivers] = await Promise.all([
             fetchJSON(`${OPENF1_BASE}/position?session_key=${session.session_key}`),
             fetchJSON(`${OPENF1_BASE}/drivers?session_key=${session.session_key}`),
           ]);
-          if (!positions || positions.length === 0) return null;
+          if (!positions || positions.length === 0) continue;
 
           const finalPos = extractFinalPositions(positions);
           const qualifyingResults = Object.entries(finalPos)
@@ -465,11 +534,12 @@ export async function fetchSeasonQualifying(year) {
               return { Driver: { driverId: dInfo.driverId }, position: String(pos), Q1: q1, Q2: q2, Q3: q3 };
             });
 
-          return { round: entry.round, raceName: entry.raceName, QualifyingResults: qualifyingResults };
-        });
+          qualiData.push({ round: entry.round, raceName: entry.raceName, QualifyingResults: qualifyingResults });
 
-        const supplementalQuali = (await Promise.all(qualiPromises)).filter(Boolean);
-        qualiData = qualiData.concat(supplementalQuali);
+          if (missingSessions.indexOf(session) < missingSessions.length - 1) {
+            await new Promise((r) => setTimeout(r, 300));
+          }
+        }
       }
 
       // Sort by round number
@@ -530,15 +600,16 @@ export async function fetchSeasonSprints(year) {
       });
 
       if (missingSessions.length > 0) {
-        const sprintPromises = missingSessions.map(async (session) => {
+        // Process sequentially to avoid OpenF1 rate limiting
+        for (const session of missingSessions) {
           const entry = findScheduleEntryForSession(session, dateToSchedule);
-          if (!entry) return null;
+          if (!entry) continue;
 
           const [positions, drivers] = await Promise.all([
             fetchJSON(`${OPENF1_BASE}/position?session_key=${session.session_key}`),
             fetchJSON(`${OPENF1_BASE}/drivers?session_key=${session.session_key}`),
           ]);
-          if (!positions || positions.length === 0) return null;
+          if (!positions || positions.length === 0) continue;
 
           const finalPos = extractFinalPositions(positions);
           const sprintResults = Object.entries(finalPos)
@@ -549,11 +620,12 @@ export async function fetchSeasonSprints(year) {
               return { position: String(posData.position), Driver: { driverId: dInfo.driverId } };
             });
 
-          return { round: entry.round, raceName: entry.raceName, SprintResults: sprintResults };
-        });
+          sprintData.push({ round: entry.round, raceName: entry.raceName, SprintResults: sprintResults });
 
-        const supplementalSprints = (await Promise.all(sprintPromises)).filter(Boolean);
-        sprintData = sprintData.concat(supplementalSprints);
+          if (missingSessions.indexOf(session) < missingSessions.length - 1) {
+            await new Promise((r) => setTimeout(r, 300));
+          }
+        }
       }
 
       // Sort by round number

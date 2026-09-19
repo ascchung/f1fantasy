@@ -29,7 +29,10 @@
     {
       "name": "Ivan",
       "drivers": ["antonelli", "hadjar", "ocon"],
-      "constructor": "Haas"
+      "constructor": "Haas",
+      "substitutions": {
+        "hadjar": { "substitute": "tsunoda", "rounds": ["12", "13", "14"] }
+      }
     },
     {
       "name": "Ashley",

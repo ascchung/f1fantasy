@@ -212,15 +212,37 @@ export function calculatePlayerStandings(driverPoints, players, races = []) {
     .map((player) => {
       const playerDrivers = player.drivers.map((driverId) => {
         const driver = driverPoints[driverId];
+        let points = driver?.points || 0;
+        let podiums = driver?.podiums || 0;
+        let fastestLaps = driver?.fastestLaps || 0;
+        let dnfs = driver?.dnfs || 0;
+
+        // Apply substitution: add substitute driver's points for specified rounds
+        const sub = player.substitutions?.[driverId];
+        if (sub) {
+          const subDriver = driverPoints[sub.substitute];
+          if (subDriver) {
+            const subRounds = new Set(sub.rounds);
+            for (const rr of subDriver.raceResults || []) {
+              if (subRounds.has(rr.round)) {
+                points += rr.points;
+                if (rr.position <= 3) podiums++;
+                if (rr.fastestLap) fastestLaps++;
+                if (rr.status !== "Finished" && !rr.status?.startsWith("+")) dnfs++;
+              }
+            }
+          }
+        }
+
         return {
           driverId,
           familyName: driver?.familyName || driverId,
           givenName: driver?.givenName || "",
           team: driver?.team || "Unknown",
-          points: driver?.points || 0,
-          podiums: driver?.podiums || 0,
-          fastestLaps: driver?.fastestLaps || 0,
-          dnfs: driver?.dnfs || 0,
+          points,
+          podiums,
+          fastestLaps,
+          dnfs,
         };
       });
       const driverTotal = playerDrivers.reduce((sum, d) => sum + d.points, 0);
@@ -242,6 +264,7 @@ export function calculatePlayerStandings(driverPoints, players, races = []) {
         drivers: playerDrivers,
         constructor: chosenTeam,
         constructorBonus,
+        substitutions: player.substitutions || null,
       };
     })
     .sort((a, b) => b.points - a.points)

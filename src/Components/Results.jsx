@@ -142,7 +142,11 @@ export default function Results() {
   // For each player, find their drivers' results for the selected round
   const playerCards = standings.map((player) => {
     const driverResults = player.drivers.map((d) => {
-      const driverData = driverPoints[d.driverId];
+      // Check if this driver has a substitution for the selected round
+      const sub = player.substitutions?.[d.driverId];
+      const isSubRound = sub && sub.rounds.includes(String(selectedRound));
+      const lookupId = isSubRound ? sub.substitute : d.driverId;
+      const driverData = driverPoints[lookupId];
       const raceResult = driverData?.raceResults?.find(
         (rr) => String(rr.round) === String(selectedRound)
       );
@@ -152,6 +156,8 @@ export default function Results() {
         familyName: driverData?.familyName || d.familyName,
         team: driverData?.team || d.team,
         raceResult,
+        isSubstitute: isSubRound,
+        substituteId: isSubRound ? sub.substitute : null,
       };
     });
 
@@ -300,7 +306,7 @@ export default function Results() {
                 return (
                   <div
                     key={d.driverId}
-                    className="bg-gray-900 rounded-lg p-3 border border-gray-700"
+                    className={`bg-gray-900 rounded-lg p-3 border ${d.isSubstitute ? "border-cyan-700" : "border-gray-700"}`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -312,8 +318,13 @@ export default function Results() {
                           P{rr.position}
                         </span>
                         <div>
-                          <div className="text-white text-sm font-medium">
+                          <div className="text-white text-sm font-medium flex items-center gap-2">
                             {d.givenName} {d.familyName}
+                            {d.isSubstitute && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-900 text-cyan-300 font-medium">
+                                SUB
+                              </span>
+                            )}
                           </div>
                           <div className="text-xs text-gray-500">{d.team}</div>
                         </div>
