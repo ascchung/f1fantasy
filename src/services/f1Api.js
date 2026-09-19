@@ -89,19 +89,19 @@ function normalizeStatus(status) {
 
 // ---- Fetching Helpers ----
 
-async function fetchJSON(url, retries = 2) {
+async function fetchJSON(url, retries = 3) {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const resp = await fetch(url);
       if (resp.status === 429 || (resp.status >= 500 && attempt < retries)) {
-        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+        await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
         continue;
       }
       if (!resp.ok) return [];
       return await resp.json();
     } catch (e) {
       if (attempt < retries) {
-        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+        await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
         continue;
       }
       console.warn(`Fetch failed: ${url}`, e.message);
@@ -444,7 +444,7 @@ export async function fetchSeasonResults(year) {
 
           // Small delay between sessions to avoid rate limiting
           if (missingSessions.indexOf(session) < missingSessions.length - 1) {
-            await new Promise((r) => setTimeout(r, 300));
+            await new Promise((r) => setTimeout(r, 750));
           }
         }
         console.log(`[f1Api] OpenF1 supplemented ${supplementalRaces.length} races: ${supplementalRaces.map(r => `R${r.round} ${r.raceName}`).join(", ")}`);
@@ -537,7 +537,7 @@ export async function fetchSeasonQualifying(year) {
           qualiData.push({ round: entry.round, raceName: entry.raceName, QualifyingResults: qualifyingResults });
 
           if (missingSessions.indexOf(session) < missingSessions.length - 1) {
-            await new Promise((r) => setTimeout(r, 300));
+            await new Promise((r) => setTimeout(r, 750));
           }
         }
       }
@@ -623,7 +623,7 @@ export async function fetchSeasonSprints(year) {
           sprintData.push({ round: entry.round, raceName: entry.raceName, SprintResults: sprintResults });
 
           if (missingSessions.indexOf(session) < missingSessions.length - 1) {
-            await new Promise((r) => setTimeout(r, 300));
+            await new Promise((r) => setTimeout(r, 750));
           }
         }
       }
@@ -726,4 +726,15 @@ export async function fetchSeasonSchedule(year) {
       return [];
     }
   });
+}
+
+/**
+ * Fetch all season data sequentially to avoid OpenF1 rate limiting.
+ * Components should use this instead of calling fetchSeasonResults/Qualifying/Sprints in parallel.
+ */
+export async function fetchAllSeasonData(year) {
+  const results = await fetchSeasonResults(year);
+  const qualifying = await fetchSeasonQualifying(year);
+  const sprints = await fetchSeasonSprints(year);
+  return { results, qualifying, sprints };
 }

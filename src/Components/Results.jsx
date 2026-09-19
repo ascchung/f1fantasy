@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { fetchSeasonResults, fetchSeasonQualifying, fetchSeasonSprints } from "../services/f1Api";
+import { fetchAllSeasonData } from "../services/f1Api";
 import {
   calculateDriverPoints,
   calculatePlayerStandings,
@@ -96,11 +96,7 @@ export default function Results() {
       try {
         const playersConfig = getPlayerConfig();
         setSeason(playersConfig.season);
-        const [raceData, qualifyingData, sprintData] = await Promise.all([
-          fetchSeasonResults(playersConfig.season),
-          fetchSeasonQualifying(playersConfig.season),
-          fetchSeasonSprints(playersConfig.season),
-        ]);
+        const { results: raceData, qualifying: qualifyingData, sprints: sprintData } = await fetchAllSeasonData(playersConfig.season);
         setRaces(raceData);
         const dp = calculateDriverPoints(raceData, qualifyingData, sprintData);
         setDriverPoints(dp);

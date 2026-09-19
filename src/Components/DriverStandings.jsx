@@ -7,7 +7,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { fetchSeasonResults, fetchSeasonQualifying, fetchSeasonSprints, fetchDriverStandings } from "../services/f1Api";
+import { fetchAllSeasonData, fetchDriverStandings } from "../services/f1Api";
 import { calculateDriverPoints } from "../services/scoringEngine";
 import { getPlayerConfig } from "../services/playerConfig";
 
@@ -116,10 +116,8 @@ export default function DriverChart() {
       try {
         const playersConfig = getPlayerConfig();
         setSeason(playersConfig.season);
-        const [races, qualifyingRaces, sprintRaces, wdcStandings] = await Promise.all([
-          fetchSeasonResults(playersConfig.season),
-          fetchSeasonQualifying(playersConfig.season),
-          fetchSeasonSprints(playersConfig.season),
+        const [{ results: races, qualifying: qualifyingRaces, sprints: sprintRaces }, wdcStandings] = await Promise.all([
+          fetchAllSeasonData(playersConfig.season),
           fetchDriverStandings(playersConfig.season),
         ]);
         const driverPoints = calculateDriverPoints(races, qualifyingRaces, sprintRaces);
